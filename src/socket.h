@@ -29,6 +29,7 @@ extern "C" {
         UT_string *read;
         UT_string *write;
         bool close;
+        bool close_afterwrite;
         bool closed;
         struct sockaddr_in* clientaddr;
     };
@@ -46,7 +47,7 @@ extern "C" {
     uint32_t skt_read(skt_info *skt);
     uint32_t skt_write(skt_info *skt);
     void skt_close(skt_info *skt);
-    char* skt_addr(skt_info *skt);
+    char* skt_clientaddr(skt_info *skt);
     
     int svr_create();
     void svr_listen(int fd, uint16_t port);

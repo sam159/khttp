@@ -27,6 +27,7 @@ skt_info* skt_new(int fd) {
     utstring_new(skt->read);
     utstring_new(skt->write);
     skt->close = false;
+    skt->close_afterwrite = false;
     skt->closed = false;
     
     return skt;
@@ -94,13 +95,13 @@ void skt_close(skt_info* skt) {
     if (skt->closed == true) {
         return;
     }
-    info("[#%lu %s] Closed", skt->id, skt_addr(skt));
+    info("[#%lu %s] Closed", skt->id, skt_clientaddr(skt));
     if (close(skt->fd) < 0) {
         warning("error closing socket", true);
     }
     skt->closed = true;
 }
-char* skt_addr(skt_info *skt) {
+char* skt_clientaddr(skt_info *skt) {
     char* address = inet_ntoa(skt->clientaddr->sin_addr);
     return address;
 }
@@ -167,7 +168,7 @@ skt_info* svr_accept(int fd) {
     skt->clientaddr = clientaddr;
     skt->fd = clientfd;
     
-    info("[#%lu %s] New Connection", skt->id, skt_addr(skt));
+    info("[#%lu %s] New Connection", skt->id, skt_clientaddr(skt));
     
     return skt;
     

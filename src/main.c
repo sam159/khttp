@@ -28,8 +28,12 @@ int main(int argc, char** argv) {
     svr_listen(serverfd, 1234);
     
     while(1) {
+        uint32_t counter;
+        skt_elem *elem, *tmp;
+        
         //Accept new connections
-        while(svr_canaccept(serverfd)) {
+        LL_COUNT(connections, elem, counter);
+        while(counter < 100 && svr_canaccept(serverfd)) {
             skt_info *info = svr_accept(serverfd);
             if (info != NULL) {
                 skt_elem* newconn = calloc(1, sizeof(skt_elem));
@@ -38,7 +42,6 @@ int main(int argc, char** argv) {
             }
         }
         
-        skt_elem *elem, *tmp;
         //Read from connections
         LL_FOREACH(connections, elem) {
             if (skt_canread(elem->info)) {
@@ -63,16 +66,19 @@ int main(int argc, char** argv) {
         }
         
         time_t current = time(NULL);
-        time_t timeout = 5;
+        time_t timeout = 30;
         time_t maxlife = 500;
         //Close where needed
         LL_FOREACH(connections, elem) {
             if (current - elem->info->last_act > timeout) {
-                info("[#%lu %s] Timeout", elem->info->id, skt_addr(elem->info));
+                info("[#%lu %s] Timeout", elem->info->id, skt_clientaddr(elem->info));
                 elem->info->close = true;
             }
             if (current - elem->info->time_opened> maxlife) {
-                info("[#%lu %s] Reached max life", elem->info->id, skt_addr(elem->info));
+                info("[#%lu %s] Reached max life", elem->info->id, skt_clientaddr(elem->info));
+                elem->info->close = true;
+            }
+            if (elem->info->close_afterwrite && utstring_len(elem->info->write) == 0) {
                 elem->info->close = true;
             }
             if (elem->info->close == true) {

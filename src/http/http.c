@@ -3,6 +3,7 @@
 #include <stdint.h>
 #include <string.h>
 #include "http.h"
+#include "../main.h"
 
 /*
  * METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
@@ -32,7 +33,7 @@ http_method http_method_fromstring(const char* method) {
         METHOD_CONNECT};
     
     size_t count = sizeof(methods) / sizeof(http_method);
-    for(int i; i < count; i++) {
+    for(int i=0; i < count; i++) {
         if (strcmp(http_method_getstring(methods[i],NULL), method) == 0) {
             return methods[i];
         }
@@ -42,6 +43,9 @@ http_method http_method_fromstring(const char* method) {
 
 http_request_line *http_request_line_new(http_method method, const char* other) {
     http_request_line *req = calloc(1, sizeof(http_request_line));
+    if (req == NULL) {
+        fatal("calloc failed");
+    }
     req->method = method;
     if (req->method == METHOD_OTHER) {
         req->method_other = calloc(strlen(other)+1, sizeof(char));
@@ -59,6 +63,9 @@ void http_request_line_delete(http_request_line *req) {
 
 http_response_line *http_response_line_new(uint16_t code) {
     http_response_line *resp = calloc(1, sizeof(http_response_line));
+    if (resp == NULL) {
+        fatal("calloc failed");
+    }
     resp->code = code;
     resp->version = HTTP11;
     return resp;
@@ -117,7 +124,9 @@ void http_reponse_line_delete(http_response_line *resp) {
 
 http_header *http_header_new(const char* name) {
     http_header *header = calloc(1, sizeof(http_header));
-    
+    if (header == NULL) {
+        fatal("calloc failed");
+    }
     header->name = calloc(strlen(name)+1, sizeof(char));
     strcpy(header->name, name);
     
@@ -126,10 +135,16 @@ http_header *http_header_new(const char* name) {
 void http_header_append_content(http_header *header, const char* content) {
     if (header->content == NULL) {
         header->content = calloc(strlen(content)+1, sizeof(char));
+        if (header->content == NULL) {
+            fatal("calloc failed");
+        }
         strcpy(header->content, content);
     } else {
         uint32_t newlen = strlen(header->content) + strlen(content) + 1;
         header->content = realloc(header->content, newlen);
+        if (header->content == NULL) {
+            fatal("calloc failed");
+        }
         strcat(header->content, content);
     }
 }
@@ -141,13 +156,20 @@ void http_header_delete(http_header *header) {
 
 http_request *http_request_new() {
     http_request *req = calloc(1, sizeof(http_request));
+    if (req == NULL) {
+        fatal("calloc failed");
+    }
     req->header_count = 0;
     req->body = NULL;
+    req->parsestatus = PARSE_REQUESTLINE;
     return req;
 }
 void http_request_add_header(http_request *req, http_header *header) {
     req->header_count++;
     req->headers = realloc(req->headers, req->header_count * sizeof(http_header*));
+    if (req->headers == NULL) {
+        fatal("calloc failed");
+    }
     req->headers[req->header_count-1] = header;
 }
 void http_request_apppend_body(http_request *req, const char* body) {
@@ -157,6 +179,9 @@ void http_request_apppend_body(http_request *req, const char* body) {
     }
     bodylen += strlen(body) + 1;
     req->body = realloc(req->body, bodylen * sizeof(char));
+    if (req->body == NULL) {
+        fatal("calloc failed");
+    }
     strcat(req->body, body);
 }
 void http_request_delete(http_request *req) {

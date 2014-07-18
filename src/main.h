@@ -20,6 +20,8 @@ void fatal(char* msg);
 void warning(char* msg, bool showPError);
 void info(char* msg, ...);
 
+char** str_splitlines(char *str, size_t *line_count);
+
 
 #ifdef	__cplusplus
 }

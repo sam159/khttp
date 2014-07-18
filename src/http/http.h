@@ -13,7 +13,6 @@ extern "C" {
 #endif
     
 #include <stdint.h>
-#include "request.h"
 
     typedef enum http_method {
         METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
@@ -43,12 +42,18 @@ extern "C" {
         char* content;
     } http_header;
     
+    typedef enum http_request_parsestatus {
+        PARSE_REQUESTLINE, PARSE_HEADERS, PARSE_BODY, PARSE_DONE, PARSE_FAIL
+    } http_request_parsestatus;
+    
     typedef struct http_request {
         http_request_line *req;
+        http_request_parsestatus parsestatus;
         http_header **headers;
         uint32_t header_count;
         char *body;
     } http_request;
+    
     
     char* http_method_getstring(http_method method, char* method_other);
     http_method http_method_fromstring(const char* method);

@@ -10,6 +10,10 @@
 #include <stdbool.h>
 #include <string.h>
 #include <strings.h>
+#include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 
 #include "ut/utlist.h"
 #include "ut/utarray.h"
@@ -17,21 +21,23 @@
 #include "socket.h"
 #include "http/http.h"
 #include "http/request.h"
+#include "http/basicresponses.h"
 
 int serverfd = 0;
-char* teststr = "GET /testing/123 HTTP/1.1\r\n";
+char* teststr = "testing testing 123 123 omg";
 
 /*
  * 
  */
 int main(int argc, char** argv) {
-    /*char *test = calloc(strlen(teststr)+1, sizeof(char));
-    strcpy(test, teststr);
     
-    http_request *req = http_request_new();
-    parse_request(req, test);
+    http_response* resp = response_create_builtin(404, "testing");
     
-    return 0;*/
+    http_response_write(stdout, resp);
+    
+    http_response_delete(resp);
+    
+    return 0;
     skt_elem *connections = NULL;
     
     serverfd = svr_create();
@@ -179,5 +185,67 @@ char** str_splitlines(char *str, size_t *line_count) {
         i++;
     }
     
+    return result;
+}
+
+file_map* map_file(const char* filename) {
+    
+    int fd = open(filename, O_RDONLY);
+    if (fd < 0) {
+        fatal("Failed to open file for memory mapping");
+    }
+    size_t size = lseek(fd, 0L, SEEK_END);
+    void* map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (map == MAP_FAILED) {
+        fatal("Failed to mmap file");
+    }
+    close(fd);
+    
+    file_map* filemap = calloc(1, sizeof(file_map));
+    filemap->map = (char*)map;
+    filemap->size = size;
+    return filemap;
+}
+void free_mapped_file(file_map* file) {
+    if (munmap((void*)file->map, file->size) < 0) {
+        warning("failed to unmap file", true);
+    }
+    free(file);
+}
+
+char* str_replace(char *haystack, const char *search, const char *replacement) {
+    
+    size_t haystacklen = strlen(haystack);
+    size_t searchlen = strlen(search);
+    size_t replacementlen = strlen(replacement);
+    
+    char* result = haystack;
+    
+    if (searchlen > haystacklen || searchlen == 0) {
+        return result;
+    }
+    if (strstr(replacement, search) != NULL) {
+        warning("str_replace: replacement should not contain the search criteria", false);
+    }
+    int count = 0;
+    while(count++ < 1000) {
+        char* pos = strstr(result, search);
+        if (pos == NULL) {
+            break;
+        }
+        uint32_t start = (pos - result) / sizeof(char);
+        uint32_t end = start + searchlen;
+        
+        size_t resultlen = strlen(result);
+        size_t newlen = resultlen + replacementlen - searchlen;
+        
+        char* newstr = calloc(newlen+1, sizeof(char));
+        strncpy(newstr, result, start);
+        strcat(newstr, replacement);
+        strcat(newstr, pos+(searchlen*sizeof(char)));
+        
+        free(result);
+        result = newstr;
+    }
     return result;
 }

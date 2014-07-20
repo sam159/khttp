@@ -15,7 +15,7 @@ extern "C" {
 #include "../ut/utstring.h"
 #include "http.h"
     
-    char* parse_request(http_request *req, char *input);
+    http_response *parse_request(http_request *req, char *input);
 
 
 #ifdef	__cplusplus

@@ -4,6 +4,7 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
+      <itemPath>src/http/basicresponses.h</itemPath>
       <itemPath>src/http/http.h</itemPath>
       <itemPath>src/main.h</itemPath>
       <itemPath>src/http/request.h</itemPath>
@@ -16,6 +17,7 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
+      <itemPath>src/http/basicresponses.c</itemPath>
       <itemPath>src/http/http.c</itemPath>
       <itemPath>src/main.c</itemPath>
       <itemPath>src/http/request.c</itemPath>
@@ -32,6 +34,10 @@
                    kind="IMPORTANT_FILES_FOLDER">
       <itemPath>Makefile</itemPath>
     </logicalFolder>
+    <itemPath>content/responses/400.html</itemPath>
+    <itemPath>dist/Debug/GNU-Linux-x86/content/blah</itemPath>
+    <itemPath>content/error.html</itemPath>
+    <itemPath>content/test.txt</itemPath>
   </logicalFolder>
   <sourceRootList>
     <Elem>include</Elem>
@@ -47,9 +53,30 @@
       <compileType>
         <cTool>
           <standard>3</standard>
-          <warningLevel>2</warningLevel>
+          <commandLine>-O0</commandLine>
+          <warningLevel>3</warningLevel>
         </cTool>
+        <linkerTool>
+          <linkerLibItems>
+            <linkerLibStdlibItem>PosixThreads</linkerLibStdlibItem>
+          </linkerLibItems>
+        </linkerTool>
       </compileType>
+      <item path="content/error.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/responses/400.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/test.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dist/Debug/GNU-Linux-x86/content/blah"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/http/basicresponses.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http/basicresponses.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/http/http.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/http/http.h" ex="false" tool="3" flavor2="0">
@@ -87,6 +114,21 @@
           <developmentMode>5</developmentMode>
         </asmTool>
       </compileType>
+      <item path="content/error.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/responses/400.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/test.txt" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="dist/Debug/GNU-Linux-x86/content/blah"
+            ex="false"
+            tool="3"
+            flavor2="0">
+      </item>
+      <item path="src/http/basicresponses.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http/basicresponses.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/http/http.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/http/http.h" ex="false" tool="3" flavor2="0">

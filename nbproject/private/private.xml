@@ -7,14 +7,17 @@
     <editor-bookmarks xmlns="http://www.netbeans.org/ns/editor-bookmarks/2" lastBookmarkId="0"/>
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
-            <file>file:/home/sam/NetBeansProjects/KHttp/src/socket.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/http.h</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/src/ut/utarray.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/main.h</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/Makefile</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/request.h</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/content/error.html</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/src/http/basicresponses.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/main.c</file>
-            <file>file:/home/sam/NetBeansProjects/KHttp/src/socket.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/request.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/http.c</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/src/http/basicresponses.c</file>
         </group>
     </open-files>
 </project-private>

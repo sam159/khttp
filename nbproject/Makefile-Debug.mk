@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/src/http/basicresponses.o \
 	${OBJECTDIR}/src/http/http.o \
 	${OBJECTDIR}/src/http/request.o \
 	${OBJECTDIR}/src/main.o \
@@ -42,7 +43,7 @@ OBJECTFILES= \
 
 
 # C Compiler Flags
-CFLAGS=
+CFLAGS=-O0
 
 # CC Compiler Flags
 CCFLAGS=
@@ -55,7 +56,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-lpthread
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -65,25 +66,30 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/src/http/basicresponses.o: src/http/basicresponses.c 
+	${MKDIR} -p ${OBJECTDIR}/src/http
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/basicresponses.o src/http/basicresponses.c
+
 ${OBJECTDIR}/src/http/http.o: src/http/http.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Wall -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/http.o src/http/http.c
+	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/http.o src/http/http.c
 
 ${OBJECTDIR}/src/http/request.o: src/http/request.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Wall -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/request.o src/http/request.c
+	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/request.o src/http/request.c
 
 ${OBJECTDIR}/src/main.o: src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Wall -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.c
+	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.c
 
 ${OBJECTDIR}/src/socket.o: src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Wall -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/socket.o src/socket.c
+	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/socket.o src/socket.c
 
 # Subprojects
 .build-subprojects:

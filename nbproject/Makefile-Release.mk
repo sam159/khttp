@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/src/http/basicresponses.o \
 	${OBJECTDIR}/src/http/http.o \
 	${OBJECTDIR}/src/http/request.o \
 	${OBJECTDIR}/src/main.o \
@@ -64,6 +65,11 @@ LDLIBSOPTIONS=
 ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp ${OBJECTFILES} ${LDLIBSOPTIONS}
+
+${OBJECTDIR}/src/http/basicresponses.o: src/http/basicresponses.c 
+	${MKDIR} -p ${OBJECTDIR}/src/http
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/basicresponses.o src/http/basicresponses.c
 
 ${OBJECTDIR}/src/http/http.o: src/http/http.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http

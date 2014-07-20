@@ -14,13 +14,22 @@ extern "C" {
 
 #include <stdbool.h>
     
-int main(int argc, char** argv);
+    typedef struct file_map {
+        char* map;
+        size_t size;
+    } file_map;
 
-void fatal(char* msg);
-void warning(char* msg, bool showPError);
-void info(char* msg, ...);
+    int main(int argc, char** argv);
 
-char** str_splitlines(char *str, size_t *line_count);
+    void fatal(char* msg);
+    void warning(char* msg, bool showPError);
+    void info(char* msg, ...);
+
+    char** str_splitlines(char *str, size_t *line_count);
+    char* str_replace(char *str, const char *search, const char *replacement);
+
+    file_map* map_file(const char* filename);
+    void  free_mapped_file(file_map* map);
 
 
 #ifdef	__cplusplus

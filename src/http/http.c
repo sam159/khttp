@@ -2,14 +2,20 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
-#include "http.h"
+#include <stdbool.h>
+#include <time.h>
 #include "../main.h"
+#include "../ut/utarray.h"
+#include "http.h"
+#include "basicresponses.h"
 
 /*
  * METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
         METHOD_DELETE, METHOD_OPTIONS, METHOD_TRACE, 
         METHOD_CONNECT, METHOD_OTHER
  */
+
+UT_icd http_header_icd = {sizeof(http_header), NULL, NULL, NULL};
 
 char* http_method_getstring(http_method method, char* method_other) {
     switch(method) {
@@ -117,18 +123,22 @@ char* http_response_line_get_message(http_response_line *resp) {
         default: return "";
     }
 }
-void http_reponse_line_delete(http_response_line *resp) {
+void http_response_line_delete(http_response_line *resp) {
     free(resp->custom_message);
     free(resp);
 }
 
-http_header *http_header_new(const char* name) {
+http_header *http_header_new(const char* name, const char* content) {
     http_header *header = calloc(1, sizeof(http_header));
     if (header == NULL) {
         fatal("calloc failed");
     }
     header->name = calloc(strlen(name)+1, sizeof(char));
     strcpy(header->name, name);
+    
+    if (content != NULL) {
+        http_header_append_content(header, content);
+    }
     
     return header;
 }
@@ -154,25 +164,69 @@ void http_header_delete(http_header *header) {
     free(header);
 }
 
+http_header_list* http_header_list_new() {
+    http_header_list* list = NULL;
+    utarray_new(list, &http_header_icd);
+    return list;
+}
+void http_header_list_add(http_header_list* list, http_header *header, bool replace) {
+    if (replace == true) {
+        http_header_list_remove(list, header->name);
+    }
+    utarray_push_back(list, header);
+    free(header);
+}
+http_header* http_header_list_get(http_header_list* list, const char* name) {
+    HTTP_HEADER_FOREACH(list, elem) {
+        if (strcmp(elem->name, name) == 0) {
+            return elem;
+        }
+    }
+    return NULL;
+}
+http_header** http_header_list_getall(http_header_list* list, const char* name, size_t *out_header_count) {
+    http_header **headers = NULL;
+    size_t count = 0;
+    HTTP_HEADER_FOREACH(list, elem) {
+        if (strcmp(elem->name, name) == 0) {
+            count++;
+            headers = realloc(headers, count * sizeof(http_header*));
+            headers[count-1] = elem;
+        }
+    }
+    *out_header_count = count;
+    return headers;
+}
+void http_header_list_remove(http_header_list *list, const char* name) {
+    http_header **headers;
+    size_t count;
+    headers = http_header_list_getall(list, name, &count);
+    for(int i=0; i<count; i++) {
+        int pos = utarray_eltidx(list,headers[i]);
+        free(headers[i]->name);
+        free(headers[i]->content);
+        utarray_erase(list, pos, 1);
+    }
+    free(headers);
+}
+void http_header_list_delete(http_header_list *list) {
+    HTTP_HEADER_FOREACH(list, elem) {
+        free(elem->name);
+        free(elem->content);
+    }
+    utarray_free(list);
+}
+
 http_request *http_request_new() {
     http_request *req = calloc(1, sizeof(http_request));
     if (req == NULL) {
         fatal("calloc failed");
     }
-    req->header_count = 0;
-    req->body = NULL;
+    req->headers = http_header_list_new();
     req->parsestatus = PARSE_REQUESTLINE;
     return req;
 }
-void http_request_add_header(http_request *req, http_header *header) {
-    req->header_count++;
-    req->headers = realloc(req->headers, req->header_count * sizeof(http_header*));
-    if (req->headers == NULL) {
-        fatal("calloc failed");
-    }
-    req->headers[req->header_count-1] = header;
-}
-void http_request_apppend_body(http_request *req, const char* body) {
+void http_request_append_body(http_request *req, const char* body) {
     uint32_t bodylen = 0;
     if (req->body != NULL) {
         bodylen = strlen(req->body);
@@ -186,10 +240,73 @@ void http_request_apppend_body(http_request *req, const char* body) {
 }
 void http_request_delete(http_request *req) {
     http_request_line_delete(req->req);
-    for(int i =0; i < req->header_count; i++) {
-        http_header_delete(req->headers[i]);
-    }
-    free(req->headers);
+    http_header_list_delete(req->headers);
     free(req->body);
     free(req);
+}
+    
+http_response* http_response_new(http_response_line *resp) {
+    http_response *response = calloc(1, sizeof(http_response));
+    response->resp = resp;
+    response->headers = http_header_list_new();
+    response->body = NULL;
+    return response;
+}
+void http_response_append_body(http_response *resp, const char* body) {
+    uint32_t bodylen = 0;
+    if (resp->body != NULL) {
+        bodylen = strlen(resp->body);
+    }
+    bodylen += strlen(body) + 1;
+    if (resp->body == NULL) {
+        resp->body = calloc(bodylen, sizeof(char));
+    } else {
+        resp->body = realloc(resp->body, bodylen * sizeof(char));
+    }
+    strcat(resp->body, body);
+}
+void http_response_delete(http_response *resp) {
+    http_response_line_delete(resp->resp);
+    http_header_list_delete(resp->headers);
+    free(resp->body);
+    free(resp);
+}
+void http_response_write(FILE *target, http_response *resp) {
+    if (resp->resp->version == HTTP10) {
+        fprintf(target, "HTTP/1.0 ");
+    } else if (resp->resp->version == HTTP11) {
+        fprintf(target, "HTTP/1.1 ");
+    }
+    //Write the response line
+    fprintf(target, "%hu %s\r\n", resp->resp->code, http_response_line_get_message(resp->resp));
+    
+    if (resp->resp->code != 100) { //No additional headers for Continue messages
+        //Add content length header
+        uint32_t messageLength = 0;
+        if (resp->body != NULL) {
+            messageLength = strlen(resp->body);
+        }
+        char messageLengthStr[100];
+        snprintf(messageLengthStr, 99, "%u", messageLength);
+        http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_LENGTH, messageLengthStr), true);
+        
+        //Add date header
+        time_t timenow = time(NULL);
+        struct tm * timeinfo = gmtime(&timenow);
+        char dateStr[100] = {0};
+        strftime(dateStr, 99, FORMAT_HEADER_DATE, timeinfo);
+        http_header_list_add(resp->headers, http_header_new(HEADER_DATE, dateStr), true);
+    }
+    
+    //write headers
+    HTTP_HEADER_FOREACH(resp->headers, elem) {
+        fprintf(target, "%s: %s\r\n", elem->name, elem->content);
+    }
+    fprintf(target, "\r\n");
+    
+    //Write the request
+    //TODO: chunked support for output
+    if (resp->body != NULL) {
+        fprintf(target, "%s", resp->body);
+    }
 }

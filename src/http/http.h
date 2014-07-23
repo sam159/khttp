@@ -31,18 +31,18 @@ extern "C" {
     
 #define FORMAT_HEADER_DATE "%a, %e %h %Y %T %Z"
     
-    typedef enum http_method {
+    typedef enum http_request_method {
         METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
         METHOD_DELETE, METHOD_OPTIONS, METHOD_TRACE, 
         METHOD_CONNECT, METHOD_OTHER, METHOD_INVALID
-    } http_method;
+    } http_request_method;
     
     typedef enum http_version {
         HTTP10, HTTP11
     } http_version;
     
     typedef struct http_request_line {
-        http_method method;
+        http_request_method method;
         char* method_other;
         char* uri;
         http_version version;
@@ -64,7 +64,7 @@ extern "C" {
     extern UT_icd http_header_icd;
     
 #define HTTP_HEADER_FOREACH(list, elem)                             \
-        for ( http_header *elem= (http_header*)utarray_front(list);  \
+        for ( http_header *elem= (http_header*)utarray_next(list,NULL);  \
             elem!= NULL;                                             \
             elem=(http_header*)utarray_next(list,elem))
     
@@ -86,10 +86,10 @@ extern "C" {
     } http_response;
     
     
-    char* http_method_getstring(http_method method, char* method_other);
-    http_method http_method_fromstring(const char* method);
+    char* http_method_getstring(http_request_method method, char* method_other);
+    http_request_method http_method_fromstring(const char* method);
     
-    http_request_line* http_request_line_new(http_method method, const char* other);
+    http_request_line* http_request_line_new(http_request_method method, const char* other);
     void http_request_line_delete(http_request_line *req);
     
     http_response_line* http_response_line_new(uint16_t code);
@@ -113,7 +113,8 @@ extern "C" {
     http_response* http_response_new(http_response_line *resp);
     void http_response_append_body(http_response *resp, const char* body);
     void http_response_delete(http_response *resp);
-    void http_response_write(FILE *target, http_response *resp);
+    char* http_response_write(http_response *resp);
+    http_response* http_response_create_builtin(uint16_t code, char* errmsg);
 
 #ifdef	__cplusplus
 }

@@ -35,12 +35,6 @@ extern "C" {
         struct sockaddr_in* clientaddr;
     };
     
-    typedef struct skt_elem {
-        skt_info* info;
-        http_request *current_request;
-        struct skt_elem *next;
-    } skt_elem;
-    
     u_int64_t skt_nextid();
     skt_info* skt_new(int fd);
     void skt_delete(skt_info *skt);

@@ -6,8 +6,8 @@
 #include <time.h>
 #include "../main.h"
 #include "../ut/utarray.h"
+#include "../ut/utstring.h"
 #include "http.h"
-#include "basicresponses.h"
 
 /*
  * METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
@@ -15,9 +15,13 @@
         METHOD_CONNECT, METHOD_OTHER
  */
 
-UT_icd http_header_icd = {sizeof(http_header), NULL, NULL, NULL};
+void http_header_icd_init_f(void* elem) {
+    memset(elem, 1, sizeof(http_header));
+}
 
-char* http_method_getstring(http_method method, char* method_other) {
+UT_icd http_header_icd = {sizeof(http_header), http_header_icd_init_f, NULL, NULL};
+
+char* http_method_getstring(http_request_method method, char* method_other) {
     switch(method) {
         case METHOD_GET:    return "GET";
         case METHOD_POST:   return "POST";
@@ -33,12 +37,12 @@ char* http_method_getstring(http_method method, char* method_other) {
     }
 }
 
-http_method http_method_fromstring(const char* method) {
-    http_method methods[] = {METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
+http_request_method http_method_fromstring(const char* method) {
+    http_request_method methods[] = {METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
         METHOD_DELETE, METHOD_OPTIONS, METHOD_TRACE, 
         METHOD_CONNECT};
     
-    size_t count = sizeof(methods) / sizeof(http_method);
+    size_t count = sizeof(methods) / sizeof(http_request_method);
     for(int i=0; i < count; i++) {
         if (strcmp(http_method_getstring(methods[i],NULL), method) == 0) {
             return methods[i];
@@ -47,7 +51,7 @@ http_method http_method_fromstring(const char* method) {
     return METHOD_INVALID;
 }
 
-http_request_line *http_request_line_new(http_method method, const char* other) {
+http_request_line *http_request_line_new(http_request_method method, const char* other) {
     http_request_line *req = calloc(1, sizeof(http_request_line));
     if (req == NULL) {
         fatal("calloc failed");
@@ -150,7 +154,7 @@ void http_header_append_content(http_header *header, const char* content) {
         }
         strcpy(header->content, content);
     } else {
-        uint32_t newlen = strlen(header->content) + strlen(content) + 1;
+        size_t newlen = strlen(header->content) + strlen(content) + 1;
         header->content = realloc(header->content, newlen);
         if (header->content == NULL) {
             fatal("calloc failed");
@@ -239,7 +243,9 @@ void http_request_append_body(http_request *req, const char* body) {
     strcat(req->body, body);
 }
 void http_request_delete(http_request *req) {
-    http_request_line_delete(req->req);
+    if (req->req != NULL) {
+        http_request_line_delete(req->req);
+    }
     http_header_list_delete(req->headers);
     free(req->body);
     free(req);
@@ -271,14 +277,17 @@ void http_response_delete(http_response *resp) {
     free(resp->body);
     free(resp);
 }
-void http_response_write(FILE *target, http_response *resp) {
+char* http_response_write(http_response *resp) {
+    UT_string *output = calloc(1, sizeof(UT_string));
+    utstring_init(output);
+    
     if (resp->resp->version == HTTP10) {
-        fprintf(target, "HTTP/1.0 ");
+        utstring_printf(output, "HTTP/1.0 ");
     } else if (resp->resp->version == HTTP11) {
-        fprintf(target, "HTTP/1.1 ");
+        utstring_printf(output, "HTTP/1.1 ");
     }
     //Write the response line
-    fprintf(target, "%hu %s\r\n", resp->resp->code, http_response_line_get_message(resp->resp));
+    utstring_printf(output, "%hu %s\r\n", resp->resp->code, http_response_line_get_message(resp->resp));
     
     if (resp->resp->code != 100) { //No additional headers for Continue messages
         //Add content length header
@@ -300,13 +309,42 @@ void http_response_write(FILE *target, http_response *resp) {
     
     //write headers
     HTTP_HEADER_FOREACH(resp->headers, elem) {
-        fprintf(target, "%s: %s\r\n", elem->name, elem->content);
+        utstring_printf(output, "%s: %s\r\n", elem->name, elem->content);
     }
-    fprintf(target, "\r\n");
+    utstring_printf(output, "\r\n");
     
     //Write the request
     //TODO: chunked support for output
     if (resp->body != NULL) {
-        fprintf(target, "%s", resp->body);
+        utstring_printf(output, "%s", resp->body);
     }
+    char* outputStr = utstring_body(output);
+    free(output);
+    return outputStr;
+}
+
+http_response* http_response_create_builtin(uint16_t code, char* errmsg) {
+    http_response *resp = http_response_new(http_response_line_new(code));
+    
+    http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/html"), false);
+    
+    file_map* errorpage = map_file("content/error.html");
+    if (errorpage != NULL) {
+        http_response_append_body(resp, errorpage->map);
+        free_mapped_file(errorpage);
+    } else {
+        http_response_append_body(resp, "{{title}}\n\n{{message}}");
+        http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/plain"), true);
+    }
+    
+    char buffer[1024] = {0};
+    
+    char* title_message = http_response_line_get_message(resp->resp);
+    snprintf(buffer, 1023, "%s %hu - %s", (code >= 400) ? "Error" : "Response Code", code, title_message);
+    resp->body = str_replace(resp->body, "{{title}}", buffer);
+    resp->body = str_replace(resp->body, "{{body_title}}", buffer);
+    
+    resp->body = str_replace(resp->body, "{{message}}", errmsg);
+    
+    return resp;
 }

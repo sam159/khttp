@@ -14,30 +14,18 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <http_parser.h>
 
 #include "ut/utlist.h"
 #include "ut/utarray.h"
 #include "main.h"
 #include "socket.h"
 #include "http/http.h"
-#include "http/request.h"
-#include "http/basicresponses.h"
+#include "http/parse.h"
 
 int serverfd = 0;
-char* teststr = "testing testing 123 123 omg";
 
-/*
- * 
- */
 int main(int argc, char** argv) {
-    
-    http_response* resp = response_create_builtin(404, "testing");
-    
-    http_response_write(stdout, resp);
-    
-    http_response_delete(resp);
-    
-    return 0;
     skt_elem *connections = NULL;
     
     serverfd = svr_create();
@@ -52,10 +40,7 @@ int main(int argc, char** argv) {
         while(counter < 100 && svr_canaccept(serverfd)) {
             skt_info *info = svr_accept(serverfd);
             if (info != NULL) {
-                skt_elem* newconn = calloc(1, sizeof(skt_elem));
-                newconn->info = info;
-                newconn->current_request = http_request_new();
-                LL_APPEND(connections, newconn);
+                LL_APPEND(connections, skt_elem_new(info));
             }
         }
         
@@ -69,15 +54,31 @@ int main(int argc, char** argv) {
         //Process sockets
         LL_FOREACH(connections, elem) {
             if (utstring_len(elem->info->read) > 0) {
-                utstring_printf(elem->info->write, "->");
-                utstring_concat(elem->info->write, elem->info->read);
+                int parsedcount = http_parser_execute(
+                        elem->parser, 
+                        parser_get_settings(elem), 
+                        utstring_body(elem->info->read), 
+                        utstring_len(elem->info->read));
+                if (parsedcount != utstring_len(elem->info->read)) {
+                    warning("error parsing request. closing connection", false);
+                    elem->info->close = true;
+                }
                 utstring_clear(elem->info->read);
+                if (elem->request_complete == true) {
+                    http_response* resp = http_response_create_builtin(200, elem->current_request->req->uri);
+                    utstring_printf(elem->info->write, "%s", http_response_write(resp));
+                    http_response_delete(resp);
+                    elem->request_complete = false;
+                    http_request_delete(elem->current_request);
+                    elem->current_request = NULL;
+                    elem->info->close_afterwrite = true;
+                }
             }
         }
         
         //Write to connections
         LL_FOREACH(connections, elem) {
-            if (utstring_len(elem->info->write) > 0) {
+            if (utstring_len(elem->info->write) > 0 && elem->info->close == false) {
                 skt_write(elem->info);
             } 
         }
@@ -91,7 +92,7 @@ int main(int argc, char** argv) {
                 info("[#%lu %s] Timeout", elem->info->id, skt_clientaddr(elem->info));
                 elem->info->close = true;
             }
-            if (current - elem->info->time_opened> maxlife) {
+            if (current - elem->info->time_opened > maxlife) {
                 info("[#%lu %s] Reached max life", elem->info->id, skt_clientaddr(elem->info));
                 elem->info->close = true;
             }
@@ -106,11 +107,7 @@ int main(int argc, char** argv) {
         LL_FOREACH_SAFE(connections, elem, tmp) {
             if (elem->info->closed) {
                 LL_DELETE(connections, elem);
-                skt_delete(elem->info);
-                if (elem->current_request != NULL) {
-                    http_request_delete(elem->current_request);
-                }
-                free(elem);
+                skt_elem_delete(elem);
             }
         }
     }
@@ -119,6 +116,21 @@ int main(int argc, char** argv) {
     serverfd = 0;
     
     return (EXIT_SUCCESS);
+}
+
+skt_elem* skt_elem_new(skt_info *info) {
+    skt_elem* elem = calloc(1, sizeof(skt_elem));
+    elem->info = info;
+    elem->parser = calloc(1, sizeof(http_parser));
+    http_parser_init(elem->parser, HTTP_REQUEST);
+    elem->parser_header_state = HSTATE_NONE;
+    elem->request_complete = false;
+    return elem;
+}
+void skt_elem_delete(skt_elem* elem) {
+    if (elem->info!=NULL) skt_delete(elem->info);
+    if (elem->current_request!=NULL) http_request_delete(elem->current_request);
+    free(elem);
 }
 
 void fatal(char* msg) {
@@ -192,12 +204,15 @@ file_map* map_file(const char* filename) {
     
     int fd = open(filename, O_RDONLY);
     if (fd < 0) {
-        fatal("Failed to open file for memory mapping");
+        warning("Failed to open file for memory mapping", true);
+        return NULL;
     }
     size_t size = lseek(fd, 0L, SEEK_END);
     void* map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
     if (map == MAP_FAILED) {
-        fatal("Failed to mmap file");
+        warning("Failed to mmap file", true);
+        close(fd);
+        return NULL;
     }
     close(fd);
     

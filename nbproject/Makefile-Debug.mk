@@ -35,9 +35,8 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
-	${OBJECTDIR}/src/http/basicresponses.o \
 	${OBJECTDIR}/src/http/http.o \
-	${OBJECTDIR}/src/http/request.o \
+	${OBJECTDIR}/src/http/parse.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/socket.o
 
@@ -56,7 +55,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lpthread
+LDLIBSOPTIONS=-lhttp_parser
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -66,20 +65,15 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp ${OBJECTFILES} ${LDLIBSOPTIONS}
 
-${OBJECTDIR}/src/http/basicresponses.o: src/http/basicresponses.c 
-	${MKDIR} -p ${OBJECTDIR}/src/http
-	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/basicresponses.o src/http/basicresponses.c
-
 ${OBJECTDIR}/src/http/http.o: src/http/http.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/http.o src/http/http.c
 
-${OBJECTDIR}/src/http/request.o: src/http/request.c 
+${OBJECTDIR}/src/http/parse.o: src/http/parse.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/request.o src/http/request.c
+	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/parse.o src/http/parse.c
 
 ${OBJECTDIR}/src/main.o: src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src

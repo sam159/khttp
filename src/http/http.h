@@ -14,7 +14,7 @@ extern "C" {
     
 #include <stdint.h>
 #include <stdbool.h>
-#include "../ut/utarray.h"
+#include "ut/utarray.h"
     
 #define HEADER_CONTENT_TYPE "Content-Type" 
 #define HEADER_CONTENT_LENGTH "Content-Length"

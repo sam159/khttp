@@ -5,8 +5,8 @@
 #include <stdbool.h>
 #include <time.h>
 #include "../main.h"
-#include "../ut/utarray.h"
-#include "../ut/utstring.h"
+#include "ut/utarray.h"
+#include "ut/utstring.h"
 #include "http.h"
 
 void http_header_icd_init_f(void* elem) {

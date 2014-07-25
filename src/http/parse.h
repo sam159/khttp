@@ -12,7 +12,7 @@
 extern "C" {
 #endif
 
-#include <http_parser.h>
+#include "http_parser.h"
 #include "http.h"
 #include "../main.h"
     
@@ -23,7 +23,7 @@ extern "C" {
     
     int parser_cb_on_message_begin(http_parser* parser);
     int parser_cb_on_url(http_parser* parser, const char *at, size_t length);
-    int parser_cb_on_status(http_parser* parser);
+    int parser_cb_on_status(http_parser* parser, const char *at, size_t length);
     int parser_cb_on_header_field(http_parser* parser, const char *at, size_t length);
     int parser_cb_on_header_value(http_parser* parser, const char *at, size_t length);
     int parser_cb_on_headers_complete(http_parser* parser);

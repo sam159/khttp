@@ -10,12 +10,13 @@
             <file>file:/home/sam/NetBeansProjects/KHttp/src/socket.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/http.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/parse.c</file>
-            <file>file:/home/sam/NetBeansProjects/KHttp/src/ut/utarray.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/main.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/Makefile</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/lib/http_parser.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/content/error.html</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/parse.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/main.c</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/lib/http_parser.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/socket.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http/http.c</file>
         </group>

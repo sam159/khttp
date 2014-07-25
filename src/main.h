@@ -13,7 +13,7 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <http_parser.h>
+#include "http_parser.h"
 #include "socket.h"
 #include "http/http.h"
     
@@ -45,8 +45,8 @@ extern "C" {
     char** str_splitlines(char *str, size_t *line_count);
     char* str_replace(char *str, const char *search, const char *replacement);
 
-    file_map* map_file(const char* filename);
-    void  free_mapped_file(file_map* map);
+    file_map* file_map_new(const char* filename);
+    void  file_map_delete(file_map* map);
 
 
 #ifdef	__cplusplus

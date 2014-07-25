@@ -35,6 +35,7 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 
 # Object Files
 OBJECTFILES= \
+	${OBJECTDIR}/lib/http_parser.o \
 	${OBJECTDIR}/src/http/http.o \
 	${OBJECTDIR}/src/http/parse.o \
 	${OBJECTDIR}/src/main.o \
@@ -55,7 +56,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lhttp_parser
+LDLIBSOPTIONS=
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -65,25 +66,30 @@ ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp: ${OBJECTFILES}
 	${MKDIR} -p ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}
 	${LINK.c} -o ${CND_DISTDIR}/${CND_CONF}/${CND_PLATFORM}/khttp ${OBJECTFILES} ${LDLIBSOPTIONS}
 
+${OBJECTDIR}/lib/http_parser.o: lib/http_parser.c 
+	${MKDIR} -p ${OBJECTDIR}/lib
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -Ilib -include lib/http_parser.h -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/lib/http_parser.o lib/http_parser.c
+
 ${OBJECTDIR}/src/http/http.o: src/http/http.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/http.o src/http/http.c
+	$(COMPILE.c) -g -Werror -Ilib -include lib/http_parser.h -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/http.o src/http/http.c
 
 ${OBJECTDIR}/src/http/parse.o: src/http/parse.c 
 	${MKDIR} -p ${OBJECTDIR}/src/http
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/parse.o src/http/parse.c
+	$(COMPILE.c) -g -Werror -Ilib -include lib/http_parser.h -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/parse.o src/http/parse.c
 
 ${OBJECTDIR}/src/main.o: src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.c
+	$(COMPILE.c) -g -Werror -Ilib -include lib/http_parser.h -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.c
 
 ${OBJECTDIR}/src/socket.o: src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/socket.o src/socket.c
+	$(COMPILE.c) -g -Werror -Ilib -include lib/http_parser.h -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/socket.o src/socket.c
 
 # Subprojects
 .build-subprojects:

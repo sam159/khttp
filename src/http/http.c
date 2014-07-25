@@ -9,17 +9,16 @@
 #include "../ut/utstring.h"
 #include "http.h"
 
-/*
- * METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
-        METHOD_DELETE, METHOD_OPTIONS, METHOD_TRACE, 
-        METHOD_CONNECT, METHOD_OTHER
- */
-
 void http_header_icd_init_f(void* elem) {
     memset(elem, 1, sizeof(http_header));
 }
+void http_header_icd_dtor_f(void* elem) {
+    http_header *header = (http_header*)elem;
+    if (header->name!=NULL) free(header->name);
+    if (header->content!=NULL) free(header->content);
+}
 
-UT_icd http_header_icd = {sizeof(http_header), http_header_icd_init_f, NULL, NULL};
+UT_icd http_header_icd = {sizeof(http_header), http_header_icd_init_f, NULL, http_header_icd_dtor_f};
 
 char* http_method_getstring(http_request_method method, char* method_other) {
     switch(method) {
@@ -207,17 +206,11 @@ void http_header_list_remove(http_header_list *list, const char* name) {
     headers = http_header_list_getall(list, name, &count);
     for(int i=0; i<count; i++) {
         int pos = utarray_eltidx(list,headers[i]);
-        free(headers[i]->name);
-        free(headers[i]->content);
         utarray_erase(list, pos, 1);
     }
     free(headers);
 }
 void http_header_list_delete(http_header_list *list) {
-    HTTP_HEADER_FOREACH(list, elem) {
-        free(elem->name);
-        free(elem->content);
-    }
     utarray_free(list);
 }
 
@@ -242,6 +235,30 @@ void http_request_append_body(http_request *req, const char* body) {
     }
     strcat(req->body, body);
 }
+char* http_request_write(http_request *req) {
+    UT_string *output = calloc(1, sizeof(UT_string));
+    utstring_init(output);
+    
+    utstring_printf(output, "%s %s %s\r\n", 
+            http_method_getstring(req->req->method, req->req->method_other),
+            req->req->uri,
+            req->req->version == HTTP10 ? "HTTP/1.0" : "HTTP/1.1"
+            );
+    
+    HTTP_HEADER_FOREACH(req->headers, elem) {
+        utstring_printf(output, "%s: %s\r\n",
+                elem->name, elem->content);
+    }
+    
+    utstring_printf(output, "\r\n");
+    
+    if (req->body != NULL) {
+        utstring_printf(output, "%s\r\n", req->body);
+    }
+    char* result = utstring_body(output);
+    free(output);
+    return result;
+}
 void http_request_delete(http_request *req) {
     if (req->req != NULL) {
         http_request_line_delete(req->req);
@@ -250,16 +267,17 @@ void http_request_delete(http_request *req) {
     free(req->body);
     free(req);
 }
-    
+
 http_response* http_response_new(http_response_line *resp) {
     http_response *response = calloc(1, sizeof(http_response));
     response->resp = resp;
     response->headers = http_header_list_new();
+    response->body_chunked = false;
     response->body = NULL;
     return response;
 }
 void http_response_append_body(http_response *resp, const char* body) {
-    uint32_t bodylen = 0;
+    size_t bodylen = 0;
     if (resp->body != NULL) {
         bodylen = strlen(resp->body);
     }
@@ -290,14 +308,24 @@ char* http_response_write(http_response *resp) {
     utstring_printf(output, "%hu %s\r\n", resp->resp->code, http_response_line_get_message(resp->resp));
     
     if (resp->resp->code != 100) { //No additional headers for Continue messages
-        //Add content length header
-        uint32_t messageLength = 0;
-        if (resp->body != NULL) {
-            messageLength = strlen(resp->body);
+        if (resp->body_chunked == false) {
+            //Add content length header
+            uint32_t messageLength = 0;
+            if (resp->body != NULL) {
+                messageLength = strlen(resp->body);
+            }
+            char messageLengthStr[100];
+            snprintf(messageLengthStr, 99, "%u", messageLength);
+            http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_LENGTH, messageLengthStr), true);
+        } else { //Chunked encoding
+            http_header_list_add(resp->headers, http_header_new(HEADER_TRANSFER_ENCODING, "chunked"), true);
         }
-        char messageLengthStr[100];
-        snprintf(messageLengthStr, 99, "%u", messageLength);
-        http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_LENGTH, messageLengthStr), true);
+        
+        //Add content type if not defined
+        http_header* contenttype = http_header_list_get(resp->headers, HEADER_CONTENT_TYPE);
+        if (contenttype == NULL) {
+            http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, DEFAULT_CONTENT_TYPE), false);
+        }
         
         //Add date header
         time_t timenow = time(NULL);
@@ -314,9 +342,13 @@ char* http_response_write(http_response *resp) {
     utstring_printf(output, "\r\n");
     
     //Write the request
-    //TODO: chunked support for output
-    if (resp->body != NULL) {
-        utstring_printf(output, "%s", resp->body);
+    if (resp->body_chunked == false && resp->body != NULL) {
+        utstring_printf(output, "%s\r\n", resp->body);
+    }
+    if (resp->body_chunked == true && resp->body != NULL) {
+        char *chunks = http_chunks_write(resp->body);
+        utstring_printf(output, "%s", chunks);
+        free(chunks);
     }
     char* outputStr = utstring_body(output);
     free(output);
@@ -328,10 +360,10 @@ http_response* http_response_create_builtin(uint16_t code, char* errmsg) {
     
     http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/html"), false);
     
-    file_map* errorpage = map_file("content/error.html");
+    file_map* errorpage = file_map_new("content/error.html");
     if (errorpage != NULL) {
         http_response_append_body(resp, errorpage->map);
-        free_mapped_file(errorpage);
+        file_map_delete(errorpage);
     } else {
         http_response_append_body(resp, "{{title}}\n\n{{message}}");
         http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/plain"), true);
@@ -347,4 +379,53 @@ http_response* http_response_create_builtin(uint16_t code, char* errmsg) {
     resp->body = str_replace(resp->body, "{{message}}", errmsg);
     
     return resp;
+}
+
+
+char* http_chunks_write(char* source) {
+    size_t sourcelen = strlen(source);
+    
+    UT_string *output = calloc(1, sizeof(UT_string));
+    utstring_init(output);
+    char buffer[HTTP_CHUNK_MAXSIZE+1] = {0};
+    //determine max chars for length line
+    sprintf(buffer, "%zx;\r\n", (size_t)HTTP_CHUNK_MAXSIZE);
+    size_t overhead = strlen(buffer);
+    overhead+=3;//account for terminating CRLF + \0
+    buffer[0] = '\0';
+    
+    size_t i = 0;
+    while (i < sourcelen) {
+        //how much can we write in this chunk?
+        size_t sourcerem = sourcelen - i;
+        size_t chunklen = 
+                sourcerem > HTTP_CHUNK_MAXSIZE-overhead 
+                    ? HTTP_CHUNK_MAXSIZE-overhead 
+                    : sourcerem;
+        utstring_printf(output, "%zx;\r\n", chunklen);
+        memset(&buffer, 0, sizeof(buffer));
+        strncpy(buffer, source+i, chunklen);
+        utstring_printf(output, "%s\r\n", buffer);
+        i += chunklen;
+    }
+    char* outputstr = utstring_body(output);
+    free(output);
+    return outputstr;
+}
+char* http_chunks_terminate(http_header_list *footers) {
+    UT_string *output = calloc(1, sizeof(UT_string));
+    utstring_init(output);
+    
+    utstring_printf(output, "0\r\n");
+    if (footers != NULL) {
+        //write footers
+        HTTP_HEADER_FOREACH(footers, elem) {
+            utstring_printf(output, "%s: %s\r\n", elem->name, elem->content);
+        }
+    }
+    utstring_printf(output, "\r\n");
+    
+    char* outputstr = utstring_body(output);
+    free(output);
+    return outputstr;
 }

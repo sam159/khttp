@@ -30,6 +30,9 @@ extern "C" {
 #define HEADER_IF_UNMODIFIED_SINCE "If-Unmodified-Since"
     
 #define FORMAT_HEADER_DATE "%a, %e %h %Y %T %Z"
+#define DEFAULT_CONTENT_TYPE "text/plain"
+
+#define HTTP_CHUNK_MAXSIZE 1024*16
     
     typedef enum http_request_method {
         METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 
@@ -82,6 +85,7 @@ extern "C" {
     typedef struct http_response {
         http_response_line *resp;
         http_header_list *headers;
+        bool body_chunked;
         char* body;
     } http_response;
     
@@ -109,12 +113,17 @@ extern "C" {
     
     http_request* http_request_new();
     void http_request_append_body(http_request *req, const char* body);
+    char* http_request_write(http_request *req);
     void http_request_delete(http_request *req);
+    
     http_response* http_response_new(http_response_line *resp);
     void http_response_append_body(http_response *resp, const char* body);
     void http_response_delete(http_response *resp);
     char* http_response_write(http_response *resp);
     http_response* http_response_create_builtin(uint16_t code, char* errmsg);
+    
+    char* http_chunks_write(char* source);
+    char* http_chunks_terminate(http_header_list *footers);
 
 #ifdef	__cplusplus
 }

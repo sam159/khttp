@@ -14,7 +14,8 @@
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
-#include <http_parser.h>
+
+#include "http_parser.h"
 
 #include "ut/utlist.h"
 #include "ut/utarray.h"
@@ -60,11 +61,20 @@ int main(int argc, char** argv) {
                         utstring_body(elem->info->read), 
                         utstring_len(elem->info->read));
                 if (parsedcount != utstring_len(elem->info->read)) {
-                    warning("error parsing request. closing connection", false);
+                    char warningmsg[2048] = {0};
+                    snprintf(warningmsg, 2048, 
+                            "error parsing request (%s: %s). closing connection", 
+                            http_errno_name(elem->parser->http_errno),
+                            http_errno_description(elem->parser->http_errno));
+                    warning(warningmsg, false);
                     elem->info->close = true;
                 }
                 utstring_clear(elem->info->read);
                 if (elem->request_complete == true) {
+                    char* reqstr = http_request_write(elem->current_request);
+                    info("\n%s\n", reqstr);
+                    free(reqstr);
+                    
                     http_response* resp = http_response_create_builtin(200, elem->current_request->req->uri);
                     utstring_printf(elem->info->write, "%s", http_response_write(resp));
                     http_response_delete(resp);
@@ -123,6 +133,7 @@ skt_elem* skt_elem_new(skt_info *info) {
     elem->info = info;
     elem->parser = calloc(1, sizeof(http_parser));
     http_parser_init(elem->parser, HTTP_REQUEST);
+    elem->parser->data = (void*)elem;
     elem->parser_header_state = HSTATE_NONE;
     elem->request_complete = false;
     return elem;
@@ -139,10 +150,9 @@ void fatal(char* msg) {
     exit(EXIT_FAILURE);
 }
 void warning(char* msg, bool showPError) {
-    
-    char warning[512];
-    bzero(&warning, sizeof warning);
-    snprintf(warning, 511, "Warning: %s", msg);
+    char warning[1024];
+    memset(&warning, 0, 1024*sizeof(char));
+    snprintf(warning, 1024, "Warning: %s", msg);
     
     if (showPError == true) {
         perror(warning);
@@ -200,7 +210,7 @@ char** str_splitlines(char *str, size_t *line_count) {
     return result;
 }
 
-file_map* map_file(const char* filename) {
+file_map* file_map_new(const char* filename) {
     
     int fd = open(filename, O_RDONLY);
     if (fd < 0) {
@@ -221,7 +231,7 @@ file_map* map_file(const char* filename) {
     filemap->size = size;
     return filemap;
 }
-void free_mapped_file(file_map* file) {
+void file_map_delete(file_map* file) {
     if (munmap((void*)file->map, file->size) < 0) {
         warning("failed to unmap file", true);
     }

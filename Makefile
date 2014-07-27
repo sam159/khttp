@@ -58,7 +58,7 @@ build: .build-post
 
 .build-post: .build-impl
 # Add your post 'build' code here...
-	cp --recursive --force ${CND_BASEDIR}/content ${CND_ARTIFACT_DIR_${CONF}}/
+	cp --recursive --force ${CND_BASEDIR}/content/* ${CND_ARTIFACT_DIR_${CONF}}/
 
 # clean
 clean: .clean-post

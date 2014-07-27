@@ -4,10 +4,13 @@
     <logicalFolder name="HeaderFiles"
                    displayName="Header Files"
                    projectFiles="true">
-      <itemPath>src/http/http.h</itemPath>
+      <itemPath>src/config.h</itemPath>
+      <itemPath>src/http-reader.h</itemPath>
+      <itemPath>src/http-server.h</itemPath>
+      <itemPath>src/http.h</itemPath>
       <itemPath>lib/http_parser.h</itemPath>
+      <itemPath>lib/ini.h</itemPath>
       <itemPath>src/main.h</itemPath>
-      <itemPath>src/http/parse.h</itemPath>
       <itemPath>src/socket.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
@@ -17,10 +20,13 @@
     <logicalFolder name="SourceFiles"
                    displayName="Source Files"
                    projectFiles="true">
-      <itemPath>src/http/http.c</itemPath>
+      <itemPath>src/config.c</itemPath>
+      <itemPath>src/http-reader.c</itemPath>
+      <itemPath>src/http-server.c</itemPath>
+      <itemPath>src/http.c</itemPath>
       <itemPath>lib/http_parser.c</itemPath>
+      <itemPath>lib/ini.c</itemPath>
       <itemPath>src/main.c</itemPath>
-      <itemPath>src/http/parse.c</itemPath>
       <itemPath>src/socket.c</itemPath>
     </logicalFolder>
     <logicalFolder name="TestFiles"
@@ -35,7 +41,9 @@
       <itemPath>Makefile</itemPath>
     </logicalFolder>
     <itemPath>content/error.html</itemPath>
-    <itemPath>content/lorem.txt</itemPath>
+    <itemPath>content/public_html/index.html</itemPath>
+    <itemPath>content/khttpd.ini</itemPath>
+    <itemPath>content/public_html/lorem.txt</itemPath>
   </logicalFolder>
   <projectmakefile>Makefile</projectmakefile>
   <confs>
@@ -43,7 +51,7 @@
       <toolsSet>
         <compilerSet>default</compilerSet>
         <dependencyChecking>true</dependencyChecking>
-        <rebuildPropChanged>false</rebuildPropChanged>
+        <rebuildPropChanged>true</rebuildPropChanged>
       </toolsSet>
       <compileType>
         <cTool>
@@ -51,28 +59,46 @@
           <incDir>
             <pElem>lib</pElem>
           </incDir>
-          <incFile>
-            <pElem>lib/http_parser.h</pElem>
-          </incFile>
           <commandLine>-O0</commandLine>
+          <preprocessorList>
+            <Elem>INI_ALLOW_BOM=0</Elem>
+            <Elem>INI_ALLOW_MULTILINE=0</Elem>
+            <Elem>_GNU_SOURCE</Elem>
+          </preprocessorList>
           <warningLevel>3</warningLevel>
         </cTool>
       </compileType>
       <item path="content/error.html" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="content/lorem.txt" ex="false" tool="3" flavor2="0">
+      <item path="content/khttpd.ini" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/public_html/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/public_html/lorem.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="lib/http_parser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="lib/http_parser.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="src/http/http.c" ex="false" tool="0" flavor2="0">
+      <item path="lib/ini.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="src/http/http.h" ex="false" tool="3" flavor2="0">
+      <item path="lib/ini.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="src/http/parse.c" ex="false" tool="0" flavor2="0">
+      <item path="src/config.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="src/http/parse.h" ex="false" tool="3" flavor2="0">
+      <item path="src/config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/http-reader.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http-reader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/http-server.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http-server.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/http.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/main.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -105,19 +131,35 @@
       </compileType>
       <item path="content/error.html" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="content/lorem.txt" ex="false" tool="3" flavor2="0">
+      <item path="content/khttpd.ini" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/public_html/index.html" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="content/public_html/lorem.txt" ex="false" tool="3" flavor2="0">
       </item>
       <item path="lib/http_parser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="lib/http_parser.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="src/http/http.c" ex="false" tool="0" flavor2="0">
+      <item path="lib/ini.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="src/http/http.h" ex="false" tool="3" flavor2="0">
+      <item path="lib/ini.h" ex="false" tool="3" flavor2="0">
       </item>
-      <item path="src/http/parse.c" ex="false" tool="0" flavor2="0">
+      <item path="src/config.c" ex="false" tool="0" flavor2="0">
       </item>
-      <item path="src/http/parse.h" ex="false" tool="3" flavor2="0">
+      <item path="src/config.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/http-reader.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http-reader.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/http-server.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http-server.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/http.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/http.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/main.c" ex="false" tool="0" flavor2="0">
       </item>

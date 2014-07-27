@@ -14,12 +14,10 @@ extern "C" {
 
 #include "http_parser.h"
 #include "http.h"
-#include "../main.h"
-    
-
-    void parser_set_currentskt(skt_elem *elem);
+#include "main.h"
     
     http_parser_settings* parser_get_settings(skt_elem *elem);
+    void parser_free_settings();
     
     int parser_cb_on_message_begin(http_parser* parser);
     int parser_cb_on_url(http_parser* parser, const char *at, size_t length);

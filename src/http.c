@@ -4,7 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include "../main.h"
+#include "main.h"
 #include "ut/utarray.h"
 #include "ut/utstring.h"
 #include "http.h"
@@ -360,7 +360,7 @@ http_response* http_response_create_builtin(uint16_t code, char* errmsg) {
     
     http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/html"), false);
     
-    file_map* errorpage = file_map_new("content/error.html");
+    file_map* errorpage = file_map_new("error.html");
     if (errorpage != NULL) {
         http_response_append_body(resp, errorpage->map);
         file_map_delete(errorpage);

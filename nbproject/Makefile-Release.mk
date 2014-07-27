@@ -36,8 +36,11 @@ OBJECTDIR=${CND_BUILDDIR}/${CND_CONF}/${CND_PLATFORM}
 # Object Files
 OBJECTFILES= \
 	${OBJECTDIR}/lib/http_parser.o \
-	${OBJECTDIR}/src/http/http.o \
-	${OBJECTDIR}/src/http/parse.o \
+	${OBJECTDIR}/lib/ini.o \
+	${OBJECTDIR}/src/config.o \
+	${OBJECTDIR}/src/http-reader.o \
+	${OBJECTDIR}/src/http-server.o \
+	${OBJECTDIR}/src/http.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/socket.o
 
@@ -71,15 +74,30 @@ ${OBJECTDIR}/lib/http_parser.o: lib/http_parser.c
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/lib/http_parser.o lib/http_parser.c
 
-${OBJECTDIR}/src/http/http.o: src/http/http.c 
-	${MKDIR} -p ${OBJECTDIR}/src/http
+${OBJECTDIR}/lib/ini.o: lib/ini.c 
+	${MKDIR} -p ${OBJECTDIR}/lib
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/http.o src/http/http.c
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/lib/ini.o lib/ini.c
 
-${OBJECTDIR}/src/http/parse.o: src/http/parse.c 
-	${MKDIR} -p ${OBJECTDIR}/src/http
+${OBJECTDIR}/src/config.o: src/config.c 
+	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
-	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http/parse.o src/http/parse.c
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/config.o src/config.c
+
+${OBJECTDIR}/src/http-reader.o: src/http-reader.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http-reader.o src/http-reader.c
+
+${OBJECTDIR}/src/http-server.o: src/http-server.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http-server.o src/http-server.c
+
+${OBJECTDIR}/src/http.o: src/http.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http.o src/http.c
 
 ${OBJECTDIR}/src/main.o: src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src

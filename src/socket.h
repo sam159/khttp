@@ -17,7 +17,7 @@ extern "C" {
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <time.h>
-#include "http/http.h"
+#include "http.h"
 #include "ut/utstring.h"
     
     typedef struct skt_info skt_info;

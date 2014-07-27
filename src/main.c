@@ -21,16 +21,22 @@
 #include "ut/utarray.h"
 #include "main.h"
 #include "socket.h"
-#include "http/http.h"
-#include "http/parse.h"
+#include "http.h"
+#include "http-reader.h"
+#include "config.h"
 
 int serverfd = 0;
 
 int main(int argc, char** argv) {
+    config_server *config = config_server_new();
+    if (config_read_ini("khttpd.ini", config) < 0) {
+        return 1;
+    }
+    
     skt_elem *connections = NULL;
     
     serverfd = svr_create();
-    svr_listen(serverfd, 1234);
+    svr_listen(serverfd, config->listen_port);
     
     while(1) {
         uint32_t counter;
@@ -55,33 +61,34 @@ int main(int argc, char** argv) {
         //Process sockets
         LL_FOREACH(connections, elem) {
             if (utstring_len(elem->info->read) > 0) {
+                //Parse the incoming data
                 int parsedcount = http_parser_execute(
                         elem->parser, 
                         parser_get_settings(elem), 
                         utstring_body(elem->info->read), 
                         utstring_len(elem->info->read));
+                //Check that all data was read
                 if (parsedcount != utstring_len(elem->info->read)) {
+                    //emit warning
                     char warningmsg[2048] = {0};
                     snprintf(warningmsg, 2048, 
                             "error parsing request (%s: %s). closing connection", 
                             http_errno_name(elem->parser->http_errno),
                             http_errno_description(elem->parser->http_errno));
                     warning(warningmsg, false);
-                    elem->info->close = true;
-                }
-                utstring_clear(elem->info->read);
-                if (elem->request_complete == true) {
-                    char* reqstr = http_request_write(elem->current_request);
-                    info("\n%s\n", reqstr);
-                    free(reqstr);
-                    
-                    http_response* resp = http_response_create_builtin(200, elem->current_request->req->uri);
-                    utstring_printf(elem->info->write, "%s", http_response_write(resp));
-                    http_response_delete(resp);
-                    elem->request_complete = false;
-                    http_request_delete(elem->current_request);
-                    elem->current_request = NULL;
+                    //send 400 back and close connection
+                    http_response *resp400 = http_response_create_builtin(400, "Request was invalid or could not be read");
+                    char *resp400str = http_response_write(resp400);
+                    utstring_printf(elem->info->write, "%s", resp400str);
+                    http_response_delete(resp400);
+                    free(resp400str);
                     elem->info->close_afterwrite = true;
+                }
+                //Clear read data now that we have processed it
+                utstring_clear(elem->info->read);
+                //Process request if received
+                if (elem->request_complete == true) {
+                    
                 }
             }
         }

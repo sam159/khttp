@@ -1,12 +1,12 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <stdbool.h>
-#include <http_parser.h>
 #include <assert.h>
 
-#include "../main.h"
+#include "main.h"
 #include "http.h"
-#include "parse.h"
+#include "http_parser.h"
+#include "http-reader.h"
 
 #define GET_CB_STR(str, at, length) do { \
     str = calloc(length+1, sizeof(char));\
@@ -29,6 +29,12 @@ http_parser_settings* parser_get_settings(skt_elem *elem) {
         parser_settings->on_url = parser_cb_on_url;
     }
     return parser_settings;
+}
+void parser_free_settings() {
+    if (parser_settings != NULL) {
+        free(parser_settings);
+        parser_settings = NULL;
+    }
 }
 
 int parser_cb_on_message_begin(http_parser* parser) {
@@ -83,6 +89,7 @@ int parser_cb_on_header_field(http_parser* parser, const char *at, size_t length
         http_header* header = SKT(parser)->parser_current_header;
         size_t newlen = strlen(header->name) + length +1;
         header->name = realloc(header->name, newlen * sizeof(char));
+        strcat(header->name, str);
     } else {
         return 1;
     }

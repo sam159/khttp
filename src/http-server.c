@@ -88,6 +88,7 @@ http_response* server_process_request(config_server* config, http_request *reque
     if (filepath_actual == NULL) {
         warning("realpath: not found/error", true);
         response = http_response_create_builtin(404, "File not found");
+        http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "close"), false);
         return response;
     }
     //Check that the file is within the server directory of the host
@@ -116,6 +117,7 @@ http_response* server_process_request(config_server* config, http_request *reque
     if (file == NULL) {
         warning("failed to open file for reading", true);
         response = http_response_create_builtin(404, "File not found");
+        http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "close"), false);
         return response;
     }
     
@@ -140,6 +142,12 @@ http_response* server_process_request(config_server* config, http_request *reque
     free(buffer);
     free(filepath_requested);
     free(filepath_actual);
+    
+    //Check to see if client requested the connection be closed
+    http_header* request_connection = http_header_list_get(request->headers, HEADER_CONNECTION);
+    if (request_connection != NULL && strcasecmp(request_connection->content, "close") == 0) {
+        http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "close"), false);
+    }
     
     return response;
 }

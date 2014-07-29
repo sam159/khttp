@@ -67,7 +67,7 @@ extern "C" {
     extern UT_icd http_header_icd;
     
 #define HTTP_HEADER_FOREACH(list, elem)                             \
-        for ( http_header *elem= (http_header*)utarray_next(list,NULL);  \
+        for (elem= (http_header*)utarray_next(list,NULL);  \
             elem!= NULL;                                             \
             elem=(http_header*)utarray_next(list,elem))
     

@@ -171,12 +171,12 @@ void skt_elem_write_response(skt_elem *elem, http_response *response, bool dispo
     char *response_str = http_response_write(response);
     utstring_printf(elem->info->write, "%s", response_str);
     free(response_str);
-    if (dispose == true) {
-        http_response_delete(response);
-    }
     http_header* connection_header = http_header_list_get(response->headers, HEADER_CONNECTION);
     if (connection_header != NULL && strcasecmp(connection_header->content, "close") == 0) {
         elem->info->close_afterwrite = true;
+    }
+    if (dispose == true) {
+        http_response_delete(response);
     }
 }
 void skt_elem_delete(skt_elem* elem) {

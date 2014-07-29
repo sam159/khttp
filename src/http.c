@@ -180,6 +180,7 @@ void http_header_list_add(http_header_list* list, http_header *header, bool repl
     free(header);
 }
 http_header* http_header_list_get(http_header_list* list, const char* name) {
+    http_header *elem;
     HTTP_HEADER_FOREACH(list, elem) {
         if (strcmp(elem->name, name) == 0) {
             return elem;
@@ -190,6 +191,7 @@ http_header* http_header_list_get(http_header_list* list, const char* name) {
 http_header** http_header_list_getall(http_header_list* list, const char* name, size_t *out_header_count) {
     http_header **headers = NULL;
     size_t count = 0;
+    http_header *elem;
     HTTP_HEADER_FOREACH(list, elem) {
         if (strcmp(elem->name, name) == 0) {
             count++;
@@ -245,6 +247,7 @@ char* http_request_write(http_request *req) {
             req->req->version == HTTP10 ? "HTTP/1.0" : "HTTP/1.1"
             );
     
+    http_header *elem;
     HTTP_HEADER_FOREACH(req->headers, elem) {
         utstring_printf(output, "%s: %s\r\n",
                 elem->name, elem->content);
@@ -333,9 +336,13 @@ char* http_response_write(http_response *resp) {
         char dateStr[100] = {0};
         strftime(dateStr, 99, FORMAT_HEADER_DATE, timeinfo);
         http_header_list_add(resp->headers, http_header_new(HEADER_DATE, dateStr), true);
+        
+        //Add server identifier header
+        http_header_list_add(resp->headers, http_header_new(HEADER_SERVER, SERVER_NAME), true);
     }
     
     //write headers
+    http_header *elem;
     HTTP_HEADER_FOREACH(resp->headers, elem) {
         utstring_printf(output, "%s: %s\r\n", elem->name, elem->content);
     }
@@ -419,6 +426,7 @@ char* http_chunks_terminate(http_header_list *footers) {
     utstring_printf(output, "0\r\n");
     if (footers != NULL) {
         //write footers
+        http_header *elem;
         HTTP_HEADER_FOREACH(footers, elem) {
             utstring_printf(output, "%s: %s\r\n", elem->name, elem->content);
         }

@@ -429,3 +429,21 @@ char* http_chunks_terminate(http_header_list *footers) {
     free(output);
     return outputstr;
 }
+
+http_response_list* http_response_list_new() {
+    http_response_list *list = calloc(1, sizeof(http_response_list));
+    list->responses = NULL;
+    list->count = 0;
+    return list;
+}
+void http_response_list_append(http_response_list *list, http_response* response) {
+    list->responses = realloc(list->responses, (++list->count)*sizeof(http_response*));
+    list->responses[list->count-1] = response;
+}
+void http_response_list_delete(http_response_list *list) {
+    http_response *elem;
+    HTTP_RESPONSE_LIST_FOREACH(list, elem) {
+        http_response_delete(elem);
+    }
+    free(list);
+}

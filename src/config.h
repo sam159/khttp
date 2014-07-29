@@ -11,19 +11,18 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
 #include <stdbool.h>
 #include "main.h"
     
 #define CONFIG_SERVER_FOREACH_HOST(config, elem)                    \
-    elem = config->hosts[0];                                        \
+    elem = config->hosts != NULL ? config->hosts[0] : NULL;         \
     for(int i=0; i < config->host_count; elem=config->hosts[i++])
     
     typedef struct config_host {
         char *hostname;
         bool default_host;
         bool enabled;
-        char* serve_dir;
+        char *serve_dir;
     } config_host;
     
     typedef struct config_server {

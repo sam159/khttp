@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/http-server.o \
 	${OBJECTDIR}/src/http.o \
 	${OBJECTDIR}/src/main.o \
+	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/socket.o
 
 
@@ -103,6 +104,11 @@ ${OBJECTDIR}/src/main.o: src/main.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.c
+
+${OBJECTDIR}/src/mime.o: src/mime.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/mime.o src/mime.c
 
 ${OBJECTDIR}/src/socket.o: src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src

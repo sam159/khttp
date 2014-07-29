@@ -14,10 +14,11 @@ extern "C" {
 
 #include "http.h"
 #include "main.h"
+#include "config.h"
+    
+    http_response* server_process_request(config_server* config, http_request *request);
     
     
-
-
 #ifdef	__cplusplus
 }
 #endif

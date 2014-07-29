@@ -89,6 +89,14 @@ extern "C" {
         char* body;
     } http_response;
     
+#define HTTP_RESPONSE_LIST_FOREACH(list, elem)                  \
+        elem = list->count == 0 ? NULL : list->responses[0];    \
+        for(int i=0; i<list->count; elem=list->responses[++i])
+    
+    typedef struct http_response_list {
+        http_response **responses;
+        size_t count;
+    } http_response_list;
     
     char* http_method_getstring(http_request_method method, char* method_other);
     http_request_method http_method_fromstring(const char* method);
@@ -124,6 +132,10 @@ extern "C" {
     
     char* http_chunks_write(char* source);
     char* http_chunks_terminate(http_header_list *footers);
+    
+    http_response_list* http_response_list_new();
+    void http_response_list_append(http_response_list *list, http_response* response);
+    void http_response_list_delete(http_response_list *list);
 
 #ifdef	__cplusplus
 }

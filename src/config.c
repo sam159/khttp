@@ -43,7 +43,7 @@ config_host* config_server_gethost(config_server *config, char *name) {
     config_host *defaulthost=NULL;
     config_host *host=NULL;
     CONFIG_SERVER_FOREACH_HOST(config, host) {
-        if (strcasecmp(name, host->hostname) == 0) {
+        if (name != NULL && strcasecmp(name, host->hostname) == 0) {
             return host;
         }
         if (host->default_host == true) {
@@ -123,13 +123,19 @@ static int config_read_ini_cb(void* _config, const char* section, const char* na
                 host->default_host = false;
             }
         } else if (MATCH("Host", "serve")) {
-            DIR *dir = opendir(value);
+            char* serve_dir = realpath(value, NULL);
+            if (serve_dir == NULL) {
+                warning("Config: host serve directory is invalid", true);
+                return -1;
+            }
+            DIR* dir = opendir(serve_dir);
             if (dir == NULL) {
+                free(serve_dir);
                 warning("Config: host serve directory is invalid", true);
                 return -1;
             }
             closedir(dir);
-            host->serve_dir = strdup(value);
+            host->serve_dir = serve_dir;
         }
     }
 #undef MATCH

@@ -8,6 +8,8 @@
     <open-files xmlns="http://www.netbeans.org/ns/projectui-open-files/2">
         <group>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/socket.c</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/content/khttpd.ini</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/src/config.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http-server.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http-reader.h</file>
@@ -16,8 +18,10 @@
             <file>file:/home/sam/NetBeansProjects/KHttp/content/error.html</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/main.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http-server.c</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/lib/ini.c</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http.h</file>
             <file>file:/home/sam/NetBeansProjects/KHttp/src/http-reader.c</file>
+            <file>file:/home/sam/NetBeansProjects/KHttp/src/config.h</file>
         </group>
     </open-files>
 </project-private>

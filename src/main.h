@@ -34,6 +34,8 @@ extern "C" {
     } skt_elem;
     
     skt_elem* skt_elem_new(skt_info *info);
+    void skt_elem_reset(skt_elem *elem);
+    void skt_elem_write_response(skt_elem *skt, http_response *response, bool dispose);
     void skt_elem_delete(skt_elem* elem);
 
     int main(int argc, char** argv);

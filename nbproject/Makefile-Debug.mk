@@ -42,6 +42,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/http-server.o \
 	${OBJECTDIR}/src/http.o \
 	${OBJECTDIR}/src/main.o \
+	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/socket.o
 
 
@@ -59,7 +60,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=
+LDLIBSOPTIONS=-lmagic
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -103,6 +104,11 @@ ${OBJECTDIR}/src/main.o: nbproject/Makefile-${CND_CONF}.mk src/main.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main.o src/main.c
+
+${OBJECTDIR}/src/mime.o: nbproject/Makefile-${CND_CONF}.mk src/mime.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/mime.o src/mime.c
 
 ${OBJECTDIR}/src/socket.o: nbproject/Makefile-${CND_CONF}.mk src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src

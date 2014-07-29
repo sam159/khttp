@@ -24,10 +24,13 @@
 #include "http.h"
 #include "http-reader.h"
 #include "config.h"
+#include "http-server.h"
+#include "mime.h"
 
 int serverfd = 0;
 
 int main(int argc, char** argv) {
+    mime_load(NULL);
     config_server *config = config_server_new();
     if (config_read_ini("khttpd.ini", config) < 0) {
         return 1;
@@ -78,17 +81,23 @@ int main(int argc, char** argv) {
                     warning(warningmsg, false);
                     //send 400 back and close connection
                     http_response *resp400 = http_response_create_builtin(400, "Request was invalid or could not be read");
-                    char *resp400str = http_response_write(resp400);
-                    utstring_printf(elem->info->write, "%s", resp400str);
+                    http_header_list_add(resp400->headers, http_header_new(HEADER_CONNECTION, "close"), false);
+                    skt_elem_write_response(elem, resp400, false);
                     http_response_delete(resp400);
-                    free(resp400str);
-                    elem->info->close_afterwrite = true;
+                    skt_elem_reset(elem);
                 }
                 //Clear read data now that we have processed it
                 utstring_clear(elem->info->read);
                 //Process request if received
                 if (elem->request_complete == true) {
+                    http_response *response = server_process_request(config, elem->current_request);
+                    if (response == NULL) {
+                        response = http_response_create_builtin(500, "Request could not be processed");
+                        http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "close"), false);
+                    }
+                    skt_elem_write_response(elem, response, true);
                     
+                    skt_elem_reset(elem);
                 }
             }
         }
@@ -129,6 +138,7 @@ int main(int argc, char** argv) {
         }
     }
     
+    mime_free();
     svr_release(serverfd);
     serverfd = 0;
     
@@ -144,6 +154,30 @@ skt_elem* skt_elem_new(skt_info *info) {
     elem->parser_header_state = HSTATE_NONE;
     elem->request_complete = false;
     return elem;
+}
+void skt_elem_reset(skt_elem *elem) {
+    if (elem->current_request != NULL) {
+        http_request_delete(elem->current_request);
+        elem->current_request = NULL;
+    }
+    if (elem->parser_current_header != NULL) {
+        http_header_delete(elem->parser_current_header);
+    }
+    elem->parser_current_header = NULL;
+    elem->parser_header_state = HSTATE_NONE;
+    elem->request_complete = false;
+}
+void skt_elem_write_response(skt_elem *elem, http_response *response, bool dispose) {
+    char *response_str = http_response_write(response);
+    utstring_printf(elem->info->write, "%s", response_str);
+    free(response_str);
+    if (dispose == true) {
+        http_response_delete(response);
+    }
+    http_header* connection_header = http_header_list_get(response->headers, HEADER_CONNECTION);
+    if (connection_header != NULL && strcasecmp(connection_header->content, "close") == 0) {
+        elem->info->close_afterwrite = true;
+    }
 }
 void skt_elem_delete(skt_elem* elem) {
     if (elem->info!=NULL) skt_delete(elem->info);

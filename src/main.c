@@ -9,11 +9,12 @@
 #include <stdlib.h>
 #include <stdbool.h>
 #include <string.h>
-#include <strings.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
 #include <sys/mman.h>
+#include <ctype.h>
+#include <signal.h>
 
 #include "http_parser.h"
 
@@ -28,13 +29,22 @@
 #include "mime.h"
 
 int serverfd = 0;
+volatile static bool stop = false;
+
+static void signal_int(int signum) {
+    fprintf(stderr, "Terminating...\n");
+    stop = true;
+}
 
 int main(int argc, char** argv) {
+    
     mime_load(NULL);
     config_server *config = config_server_new();
     if (config_read_ini("khttpd.ini", config) < 0) {
-        return 1;
+        fatal("Could not read config");
     }
+    
+    signal(SIGINT, signal_int);
     
     skt_elem *connections = NULL;
     
@@ -42,15 +52,16 @@ int main(int argc, char** argv) {
     svr_listen(serverfd, config->listen_port);
     
     while(1) {
-        uint32_t counter;
+        uint32_t connections_open;
         skt_elem *elem, *tmp;
         
         //Accept new connections
-        LL_COUNT(connections, elem, counter);
-        while(counter < 100 && svr_canaccept(serverfd)) {
+        LL_COUNT(connections, elem, connections_open);
+        while(connections_open < 100 && svr_canaccept(serverfd)) {
             skt_info *info = svr_accept(serverfd);
             if (info != NULL) {
-                LL_APPEND(connections, skt_elem_new(info));
+                skt_elem *elem = skt_elem_new(info);
+                LL_APPEND(connections, elem);
             }
         }
         
@@ -78,7 +89,7 @@ int main(int argc, char** argv) {
                             "error parsing request (%s: %s). closing connection", 
                             http_errno_name(elem->parser->http_errno),
                             http_errno_description(elem->parser->http_errno));
-                    warning(warningmsg, false);
+                    warning(false, warningmsg);
                     //send 400 back and close connection
                     http_response *resp400 = http_response_create_builtin(400, "Request was invalid or could not be read");
                     http_header_list_add(resp400->headers, http_header_new(HEADER_CONNECTION, "close"), false);
@@ -125,7 +136,7 @@ int main(int argc, char** argv) {
             if (elem->info->close_afterwrite && utstring_len(elem->info->write) == 0) {
                 elem->info->close = true;
             }
-            if (elem->info->close == true) {
+            if (elem->info->close == true || stop == true) {
                 skt_close(elem->info);
             }
         }
@@ -136,9 +147,13 @@ int main(int argc, char** argv) {
                 skt_elem_delete(elem);
             }
         }
+        if (stop == true) {
+            break;
+        }
     }
     
     mime_free();
+    config_server_delete(config);
     svr_release(serverfd);
     serverfd = 0;
     
@@ -168,13 +183,20 @@ void skt_elem_reset(skt_elem *elem) {
     elem->request_complete = false;
 }
 void skt_elem_write_response(skt_elem *elem, http_response *response, bool dispose) {
-    char *response_str = http_response_write(response);
-    utstring_printf(elem->info->write, "%s", response_str);
-    free(response_str);
     http_header* connection_header = http_header_list_get(response->headers, HEADER_CONNECTION);
     if (connection_header != NULL && strcasecmp(connection_header->content, "close") == 0) {
         elem->info->close_afterwrite = true;
     }
+    if (connection_header == NULL) {
+        if (response->resp->version == HTTP11) {
+            http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "Keep-Alive"), true);
+        } else if (response->resp->version == HTTP10) {
+            elem->info->close_afterwrite = true;
+        }
+    }
+    char *response_str = http_response_write(response);
+    utstring_printf(elem->info->write, "%s", response_str);
+    free(response_str);
     if (dispose == true) {
         http_response_delete(response);
     }
@@ -182,136 +204,10 @@ void skt_elem_write_response(skt_elem *elem, http_response *response, bool dispo
 void skt_elem_delete(skt_elem* elem) {
     if (elem->info!=NULL) skt_delete(elem->info);
     if (elem->current_request!=NULL) http_request_delete(elem->current_request);
+    if (elem->parser!= NULL) {
+        elem->parser->data = NULL;
+        free(elem->parser);
+    }
+    
     free(elem);
-}
-
-void fatal(char* msg) {
-    fprintf(stderr, "\n");
-    perror(msg);
-    exit(EXIT_FAILURE);
-}
-void warning(char* msg, bool showPError) {
-    char warning[1024];
-    memset(&warning, 0, 1024*sizeof(char));
-    snprintf(warning, 1024, "Warning: %s", msg);
-    
-    if (showPError == true) {
-        perror(warning);
-    } else {
-        fprintf(stderr, "%s\n", warning);
-    }
-}
-void info(char* msg, ...) {
-    va_list va;
-    va_start(va, msg);
-    vfprintf(stdout, msg, va);
-    fputc('\n', stdout);
-    va_end(va);
-}
-
-char** str_splitlines(char *str, size_t *line_count) {
-    char **result;
-    *line_count = 0;
-    char *tmp = str;
-    
-    while(*tmp) {
-        if (*tmp == '\n') {
-            (*line_count)++;
-        }
-        tmp++;
-    }
-    if (*line_count == 0) {
-        result = calloc(1, sizeof(char*));
-        result[0] = calloc(strlen(str), sizeof(char));
-        strcpy(result[0], str);
-        return result;
-    }
-    result = calloc(*line_count, sizeof(char*));
-    if (result == NULL) {
-        fatal("calloc failed");
-    }
-    
-    size_t i=0, linelen = 0;
-    char *line = strtok(str, "\n");
-    while(line) {
-        linelen = strlen(line);
-        result[i] = calloc(linelen+1, sizeof(char));
-        if (result[i] == NULL) {
-            fatal("calloc failed");
-        }
-        strcpy(result[i], line);
-        if (result[i][linelen-1] == '\r') {
-            result[i][linelen-1] = '\0';
-            result[i] = realloc(result[i], linelen);
-        }
-        line = strtok(NULL, "\n");
-        i++;
-    }
-    
-    return result;
-}
-
-file_map* file_map_new(const char* filename) {
-    
-    int fd = open(filename, O_RDONLY);
-    if (fd < 0) {
-        warning("Failed to open file for memory mapping", true);
-        return NULL;
-    }
-    size_t size = lseek(fd, 0L, SEEK_END);
-    void* map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (map == MAP_FAILED) {
-        warning("Failed to mmap file", true);
-        close(fd);
-        return NULL;
-    }
-    close(fd);
-    
-    file_map* filemap = calloc(1, sizeof(file_map));
-    filemap->map = (char*)map;
-    filemap->size = size;
-    return filemap;
-}
-void file_map_delete(file_map* file) {
-    if (munmap((void*)file->map, file->size) < 0) {
-        warning("failed to unmap file", true);
-    }
-    free(file);
-}
-
-char* str_replace(char *haystack, const char *search, const char *replacement) {
-    
-    size_t haystacklen = strlen(haystack);
-    size_t searchlen = strlen(search);
-    size_t replacementlen = strlen(replacement);
-    
-    char* result = haystack;
-    
-    if (searchlen > haystacklen || searchlen == 0) {
-        return result;
-    }
-    if (strstr(replacement, search) != NULL) {
-        warning("str_replace: replacement should not contain the search criteria", false);
-    }
-    int count = 0;
-    while(count++ < 1000) {
-        char* pos = strstr(result, search);
-        if (pos == NULL) {
-            break;
-        }
-        uint32_t start = (pos - result) / sizeof(char);
-        uint32_t end = start + searchlen;
-        
-        size_t resultlen = strlen(result);
-        size_t newlen = resultlen + replacementlen - searchlen;
-        
-        char* newstr = calloc(newlen+1, sizeof(char));
-        strncpy(newstr, result, start);
-        strcat(newstr, replacement);
-        strcat(newstr, pos+(searchlen*sizeof(char)));
-        
-        free(result);
-        result = newstr;
-    }
-    return result;
 }

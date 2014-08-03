@@ -20,7 +20,7 @@ config_server* config_server_new() {
     
     config->servername = calloc(128, sizeof(char));
     if (gethostname(config->servername, 128) < 0) {
-        warning("failed to get server hostname", true);
+        warning(true, "failed to get server hostname");
         free(config->servername);
         config->servername = strdup(default_servername);
     }
@@ -69,12 +69,20 @@ config_host* config_host_new() {
     host->enabled = true;
     host->hostname = NULL;
     host->serve_dir = NULL;
+    host->dir_listings = true;
+    host->index_files = calloc(1, sizeof(char*));
+    host->index_files[0] = strdup("index.html");
+    host->index_files_count = 1;
     
     return host;
 }
 void config_host_delete(config_host *host) {
     if (host->hostname != NULL)  free(host->hostname);
     if (host->serve_dir != NULL) free(host->serve_dir);
+    for(int i=0; i<host->index_files_count; i++) {
+        free(host->index_files[i]);
+    }
+    free(host->index_files);
     free(host);
 }
 
@@ -92,18 +100,21 @@ static int config_read_ini_cb(void* _config, const char* section, const char* na
         return -1;
     } else if (name != NULL) {
         if (MATCH("Server", "name")) {
-            config->servername = strdup(value);
+            config->servername = realloc(config->servername, strlen(value)+1);
+            strcpy(config->servername, value);
         } else if (MATCH("Server", "admin")) {
-            config->administrator = strdup(value);
+            config->administrator = realloc(config->administrator, strlen(value)+1);
+            strcpy(config->administrator, value);
         } else if (MATCH("Server", "listen")) {
             errno = 0;
             config->listen_port = (uint16_t)strtol(value, NULL, 10);
             if (errno != 0) {
-                warning("Config: Invalid port number for [Server]listen", true);
+                warning(true, "Config: Invalid port number for [Server]listen");
             }
             return -1;
         } else if (MATCH("Host", "name")) {
-            host->hostname = strdup(value);
+            host->hostname = realloc(host->hostname, strlen(value)+1);
+            strcpy(host->hostname, value);
         } else if (MATCH("Host", "enabled")) {
             if (strcasecmp(value, "yes") == 0) {
                 host->enabled = true;
@@ -125,17 +136,43 @@ static int config_read_ini_cb(void* _config, const char* section, const char* na
         } else if (MATCH("Host", "serve")) {
             char* serve_dir = realpath(value, NULL);
             if (serve_dir == NULL) {
-                warning("Config: host serve directory is invalid", true);
+                warning(true, "Config: host serve directory is invalid");
                 return -1;
             }
             DIR* dir = opendir(serve_dir);
             if (dir == NULL) {
                 free(serve_dir);
-                warning("Config: host serve directory is invalid", true);
+                warning(true, "Config: host serve directory is invalid");
                 return -1;
             }
             closedir(dir);
+            if (host->serve_dir != NULL) free(host->serve_dir);
             host->serve_dir = serve_dir;
+        } else if (MATCH("Host", "index_files")) {
+            for(int i=0;i<host->index_files_count;i++) {
+                free(host->index_files[i]);
+            }
+            free(host->index_files);
+            host->index_files = NULL;
+            host->index_files_count = 0;
+            
+            char* savepos=NULL;
+            char* value_cpy = strdup(value);
+            char* file = strtok_r(value_cpy, ",", &savepos);
+            while(file != NULL) {
+                host->index_files = realloc(host->index_files, sizeof(char*)*(host->index_files_count+1));
+                host->index_files[host->index_files_count++] = strdup(str_trimwhitespace(file));
+                file = strtok_r(NULL, ",", &savepos);
+            }
+            free(value_cpy);
+        } else if (MATCH("Host", "dir_listings")) {
+            if (strcasecmp(value, "yes") == 0) {
+                host->dir_listings = true;
+            } else if (strcasecmp(value, "no") == 0) {
+                host->dir_listings = false;
+            } else {
+                warning(false, "Unexpected value for [Host]dir_listings");
+            }
         }
     }
 #undef MATCH

@@ -43,11 +43,12 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/http.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/mime.o \
-	${OBJECTDIR}/src/socket.o
+	${OBJECTDIR}/src/socket.o \
+	${OBJECTDIR}/src/util.o
 
 
 # C Compiler Flags
-CFLAGS=-O0
+CFLAGS=-m64 -O0 -march=native
 
 # CC Compiler Flags
 CCFLAGS=
@@ -114,6 +115,11 @@ ${OBJECTDIR}/src/socket.o: nbproject/Makefile-${CND_CONF}.mk src/socket.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/socket.o src/socket.c
+
+${OBJECTDIR}/src/util.o: nbproject/Makefile-${CND_CONF}.mk src/util.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/util.o src/util.c
 
 # Subprojects
 .build-subprojects:

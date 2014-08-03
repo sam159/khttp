@@ -29,7 +29,7 @@ extern "C" {
 #define HEADER_IF_MODIFIED_SINCE "If-Modified-Since"
 #define HEADER_IF_UNMODIFIED_SINCE "If-Unmodified-Since"
     
-#define FORMAT_HEADER_DATE "%a, %e %h %Y %T %Z"
+#define FORMAT_HEADER_DATE "%a, %d %h %Y %T %Z"
 #define DEFAULT_CONTENT_TYPE "text/plain"
 
 #define HTTP_CHUNK_MAXSIZE 1024*16

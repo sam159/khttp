@@ -17,7 +17,7 @@
 
 u_int64_t skt_nextid() {
     static u_int64_t id = 0;
-    return id++;
+    return __atomic_fetch_add(&id, 1, __ATOMIC_SEQ_CST);
 }
 skt_info* skt_new(int fd) {
     skt_info* skt = calloc(1, sizeof(skt_info));
@@ -29,7 +29,6 @@ skt_info* skt_new(int fd) {
     skt->close = false;
     skt->close_afterwrite = false;
     skt->closed = false;
-    
     return skt;
 }
 void skt_delete(skt_info* skt) {
@@ -42,7 +41,7 @@ void skt_delete(skt_info* skt) {
 bool skt_canread(skt_info* skt) {
     int len = 0;
     if (ioctl(skt->fd, FIONREAD, &len) < 0) {
-        warning("ioctl failed", true);
+        warning(true, "ioctl failed");
         return false;
     }
     return len > 0;
@@ -52,9 +51,11 @@ uint32_t skt_read(skt_info* skt) {
     memset(buffer, 0, 1024);
     
     int result = read(skt->fd, &buffer,1023);
-    if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        warning("read error", true);
-        skt->close = true;
+    if (result < 0) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            warning(true, "read error");
+            skt->close = true;
+        }
         return 0;
     }
     skt->last_act = time(NULL);
@@ -67,17 +68,19 @@ uint32_t skt_write(skt_info* skt) {
     }
     
     int result = write(skt->fd, utstring_body(skt->write), utstring_len(skt->write));
-    if (result < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        warning("write error", true);
-        skt->close = true;
+    if (result < 0) {
+        if (errno != EAGAIN && errno != EWOULDBLOCK) {
+            warning(true, "write error");
+            skt->close = true;
+        }
         return 0;
     }
+    
     skt->last_act = time(NULL);
     
     if (result == utstring_len(skt->write)) {
-        utstring_free(skt->write);
-        utstring_new(skt->write);
-        return 0;
+        utstring_clear(skt->write);
+        return result;
     }
     //remove first x chars
     char* newstr = calloc(utstring_len(skt->write) - result + 1, sizeof(char));
@@ -85,8 +88,7 @@ uint32_t skt_write(skt_info* skt) {
     char* writeBody = utstring_body(skt->write);
     strcpy(newstr, writeBody + (sizeof(char) * result));
     
-    utstring_free(skt->write);
-    utstring_new(skt->write);
+    utstring_clear(skt->write);
     utstring_printf(skt->write, "%s", newstr);
     free(newstr);
     return result; //bytes written
@@ -97,7 +99,7 @@ void skt_close(skt_info* skt) {
     }
     info("[#%lu %s] Closed", skt->id, skt_clientaddr(skt));
     if (close(skt->fd) < 0) {
-        warning("error closing socket", true);
+        warning(true, "error closing socket");
     }
     skt->closed = true;
 }
@@ -122,20 +124,18 @@ void svr_listen(int fd, uint16_t port) {
     server_address.sin_port = htons(port);
     
     if (bind(fd, (struct sockaddr*)&server_address, sizeof server_address) < 0) {
-        warning("failed to bind", true);
         close(fd);
-        exit(EXIT_FAILURE);
+        fatal("Failed to bind to socket");
     }
     if (listen(fd, 16) < 0) {
-        warning("failed to listen", true);
         close(fd);
-        exit(EXIT_FAILURE);
+        fatal("Could not set socket to listen mode");
     }
     info("Listening on port %u", port);
 }
 void svr_release(int fd) {
     if (close(fd) < 0) {
-        warning("could not close socket", true);
+        warning(true, "could not close socket");
     }
 }
 bool svr_canaccept(int fd) {
@@ -145,12 +145,15 @@ bool svr_canaccept(int fd) {
     pfd[0].events = POLLIN;
     
     if (poll(pfd, 1, 50/*ms*/) < 0) {
-        warning("poll failed", true);
+        warning(true, "poll failed");
+        free(pfd);
         return false;
     }
     if ((pfd[0].revents & POLLIN) == POLLIN) {
+        free(pfd);
         return true;
     }
+    free(pfd);
     return false;
 }
 skt_info* svr_accept(int fd) {
@@ -160,7 +163,7 @@ skt_info* svr_accept(int fd) {
     socklen_t clientaddr_len = (socklen_t)sizeof(struct sockaddr_in);
     clientfd = accept(fd, (struct sockaddr*)clientaddr, &clientaddr_len);
     if (clientfd < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
-        warning("error accepting connection", true);
+        warning(true, "error accepting connection");
         return NULL;
     }
     

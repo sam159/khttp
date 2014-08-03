@@ -23,6 +23,9 @@ extern "C" {
         bool default_host;
         bool enabled;
         char *serve_dir;
+        char**index_files;
+        size_t index_files_count;
+        bool dir_listings;
     } config_host;
     
     typedef struct config_server {

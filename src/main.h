@@ -18,11 +18,7 @@ extern "C" {
 #include "http_parser.h"
 #include "socket.h"
 #include "http.h"
-    
-    typedef struct file_map {
-        char* map;
-        size_t size;
-    } file_map;
+#include "util.h"
     
     typedef enum skt_elem_hstate {HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD} skt_elem_hstate;
     typedef struct skt_elem {
@@ -42,15 +38,7 @@ extern "C" {
 
     int main(int argc, char** argv);
 
-    void fatal(char* msg);
-    void warning(char* msg, bool showPError);
-    void info(char* msg, ...);
-
-    char** str_splitlines(char *str, size_t *line_count);
-    char* str_replace(char *str, const char *search, const char *replacement);
-
-    file_map* file_map_new(const char* filename);
-    void  file_map_delete(file_map* map);
+    
 
 
 #ifdef	__cplusplus

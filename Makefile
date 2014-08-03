@@ -62,6 +62,7 @@ build: .build-post
 
 # clean
 clean: .clean-post
+	-rm --recursive ${CND_ARTIFACT_DIR_${CONF}}/
 
 .clean-pre:
 # Add your pre 'clean' code here...

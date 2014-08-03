@@ -8,13 +8,14 @@
 #include "mime.h"
 #include "main.h"
 
-mime_type *mime_list;
+mime_type *mime_list = NULL;
 
 int mime_load(const char* file) {
     FILE *mimetypes = fopen(file == NULL ? MIME_DEFAULT_FILE : file, "r");
     if (mimetypes == NULL) {
         return -1;
     }
+    mime_type *new_list = NULL;
     size_t count = 1024;
     char* buffer = calloc(count, sizeof(char));
     ssize_t linelength;
@@ -35,7 +36,7 @@ int mime_load(const char* file) {
                 mime_type *new = calloc(1, sizeof(mime_type));
                 new->extension = strdup(ext);
                 new->mime = strdup(mime);
-                LL_APPEND(mime_list, new);
+                LL_APPEND(new_list, new);
                 ext = strtok_r(NULL, " \t", &saveptr);
             }
         }
@@ -43,6 +44,12 @@ int mime_load(const char* file) {
     }
     free(buffer);
     fclose(mimetypes);
+    
+    if (mime_list != NULL) {
+        mime_free();
+    }
+    mime_list = new_list;
+    
     count = 0;
     mime_type *elem;
     LL_COUNT(mime_list, elem, count);

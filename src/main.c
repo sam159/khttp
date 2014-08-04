@@ -15,6 +15,7 @@
 #include <sys/mman.h>
 #include <ctype.h>
 #include <signal.h>
+#include <bits/stdio2.h>
 
 #include "http_parser.h"
 
@@ -27,6 +28,7 @@
 #include "config.h"
 #include "http-server.h"
 #include "mime.h"
+#include "queue.h"
 
 int serverfd = 0;
 volatile static bool stop = false;

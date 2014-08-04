@@ -43,6 +43,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/http.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/mime.o \
+	${OBJECTDIR}/src/queue.o \
 	${OBJECTDIR}/src/socket.o \
 	${OBJECTDIR}/src/util.o
 
@@ -61,7 +62,7 @@ FFLAGS=
 ASFLAGS=
 
 # Link Libraries and Options
-LDLIBSOPTIONS=-lmagic
+LDLIBSOPTIONS=-lmagic -lpthread
 
 # Build Targets
 .build-conf: ${BUILD_SUBPROJECTS}
@@ -110,6 +111,11 @@ ${OBJECTDIR}/src/mime.o: nbproject/Makefile-${CND_CONF}.mk src/mime.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/mime.o src/mime.c
+
+${OBJECTDIR}/src/queue.o: nbproject/Makefile-${CND_CONF}.mk src/queue.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/queue.o src/queue.c
 
 ${OBJECTDIR}/src/socket.o: nbproject/Makefile-${CND_CONF}.mk src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src

@@ -24,11 +24,15 @@ extern "C" {
     
     extern mime_type *mime_list;
     
-    int mime_load(const char* file);
-    void mime_free();
-    void mime_print_all();
+    int mime_init(const char* file);
+    void mime_destroy();
+    
+    int mime_load(mime_type **list, const char* file);
+    void mime_free(mime_type *list);
+    void mime_print_all(mime_type *list);
     
     const char* mime_get_type(const char* filename, const char* fallback);
+    const char* mime_list_get_type(mime_type *list, const char* filename, const char* fallback);
     const char* mime_get_type_magic(const char* filename, const char* fallback);
 
 #ifdef	__cplusplus

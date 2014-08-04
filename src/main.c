@@ -38,7 +38,7 @@ static void signal_int(int signum) {
 
 int main(int argc, char** argv) {
     
-    mime_load(NULL);
+    mime_init(NULL);
     config_server *config = config_server_new();
     if (config_read_ini("khttpd.ini", config) < 0) {
         fatal("Could not read config");
@@ -152,7 +152,7 @@ int main(int argc, char** argv) {
         }
     }
     
-    mime_free();
+    mime_destroy();
     config_server_delete(config);
     svr_release(serverfd);
     serverfd = 0;

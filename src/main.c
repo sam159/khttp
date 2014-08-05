@@ -29,6 +29,7 @@
 #include "http-server.h"
 #include "mime.h"
 #include "queue.h"
+#include "thread-pool.h"
 
 int serverfd = 0;
 volatile static bool stop = false;

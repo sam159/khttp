@@ -45,6 +45,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/queue.o \
 	${OBJECTDIR}/src/socket.o \
+	${OBJECTDIR}/src/thread-pool.o \
 	${OBJECTDIR}/src/util.o
 
 
@@ -121,6 +122,11 @@ ${OBJECTDIR}/src/socket.o: nbproject/Makefile-${CND_CONF}.mk src/socket.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -O2 -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/socket.o src/socket.c
+
+${OBJECTDIR}/src/thread-pool.o: nbproject/Makefile-${CND_CONF}.mk src/thread-pool.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -O2 -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/thread-pool.o src/thread-pool.c
 
 ${OBJECTDIR}/src/util.o: nbproject/Makefile-${CND_CONF}.mk src/util.c 
 	${MKDIR} -p ${OBJECTDIR}/src

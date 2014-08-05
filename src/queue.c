@@ -76,3 +76,13 @@ queue_item* queue_fetchone(queue *q, bool blocking) {
     QUEUE_UNLOCK(q);
     return item;
 }
+void queue_clear(queue *q) {
+    QUEUE_LOCK(q);
+    queue_item *elem, *tmp;
+    DL_FOREACH_SAFE(q->list, elem, tmp) {
+        queue_item_delete(elem);
+        DL_DELETE(q->list, elem);
+    }
+    pthread_cond_broadcast(q->cond);
+    QUEUE_UNLOCK(q);
+}

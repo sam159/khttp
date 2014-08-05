@@ -51,6 +51,7 @@ extern "C" {
    int queue_add(queue *q, queue_item *item);
    int queue_remove(queue *q, queue_item *item);
    queue_item* queue_fetchone(queue *q, bool blocking);
+   void queue_clear(queue *q);
 
 #ifdef	__cplusplus
 }

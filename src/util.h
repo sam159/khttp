@@ -19,9 +19,9 @@ extern "C" {
         size_t size;
     } file_map;
     
-    void fatal(char* msg);
-    void warning(bool showPError, char* msg, ...);
-    void info(char* msg, ...);
+    void fatal(char* fmt, ...);
+    void warning(bool use_errno, char* fmt, ...);
+    void info(char* fmt, ...);
 
     char* str_trimwhitespace(char *str);
     char** str_splitlines(char *str, size_t *line_count);

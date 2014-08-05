@@ -12,28 +12,34 @@
 
 #include "util.h"
 
-void fatal(char* msg) {
+void fatal(char* fmt, ...) {
+    char msg[128] = {0};
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf(msg, 128, fmt, va);
+    va_end(va);
+    
     fprintf(stderr, "\n");
     perror(msg);
     exit(EXIT_FAILURE);
 }
-void warning(bool showPError, char* msg, ...) {
-    char warning[128] = {0};
+void warning(bool use_errno, char* fmt, ...) {
+    char msg[128] = {0};
     va_list va;
-    va_start(va, msg);
-    vsnprintf(warning, 128, msg, va);
+    va_start(va, fmt);
+    vsnprintf(msg, 128, fmt, va);
     va_end(va);
     
-    if (showPError == true) {
-        perror(warning);
+    if (use_errno == true) {
+        perror(msg);
     } else {
-        fprintf(stderr, "%s\n", warning);
+        fprintf(stderr, "%s\n", msg);
     }
 }
-void info(char* msg, ...) {
+void info(char* fmt, ...) {
     va_list va;
-    va_start(va, msg);
-    vfprintf(stdout, msg, va);
+    va_start(va, fmt);
+    vfprintf(stdout, fmt, va);
     fputc('\n', stdout);
     va_end(va);
 }

@@ -117,7 +117,7 @@ void* thread_mgt(void* arg) {
     
     //Management loop
     struct timespec loopdelay;
-    loopdelay.tv_nsec = 10*1000;
+    loopdelay.tv_nsec = 250*1000;//250ms
     loopdelay.tv_sec = 0;
     
     int64_t last_queue_count = 0;

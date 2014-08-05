@@ -125,7 +125,7 @@ void* thread_mgt(void* arg) {
         
         int64_t queue_count_diff = pool->queue->count - last_queue_count;
         int64_t watermark = pool->thread_count * pool->queue_factor;
-        if (queue_count_diff > watermark && pool->thread_count <= pool->max_threads) {
+        if (queue_count_diff > watermark && pool->thread_count < pool->max_threads) {
             //New thread
             thread *th = thread_new(pool);
             thread_pool_add_thread(pool, th);
@@ -165,10 +165,10 @@ void* thread_mgt(void* arg) {
     LL_FOREACH(pool->threads, elem) {
         elem->stop = true;
     }
-    //Ping the queue to wake up the threads
-    QUEUE_LOCK(pool->queue);
-    pthread_cond_broadcast(pool->queue->cond);
-    QUEUE_UNLOCK(pool->queue);
+    
+    //Ping the queue to wake up the threads (this should prompt them to check the stop flag)
+    queue_ping(pool->queue);
+    
     //Remove threads
     LL_FOREACH_SAFE(pool->threads, elem, tmp) {
         thread_stop(elem);

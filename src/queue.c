@@ -86,3 +86,8 @@ void queue_clear(queue *q) {
     pthread_cond_broadcast(q->cond);
     QUEUE_UNLOCK(q);
 }
+void queue_ping(queue *q) {
+    QUEUE_LOCK(q);
+    pthread_cond_broadcast(q->cond);
+    QUEUE_UNLOCK(q);
+}

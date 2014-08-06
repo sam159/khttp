@@ -91,3 +91,10 @@ void queue_ping(queue *q) {
     pthread_cond_broadcast(q->cond);
     QUEUE_UNLOCK(q);
 }
+size_t queue_count(queue *q) {
+    size_t count;
+    QUEUE_LOCK(q);
+    count = q->count;
+    QUEUE_UNLOCK(q);
+    return count;
+}

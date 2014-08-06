@@ -59,7 +59,7 @@ extern "C" {
     void thread_pool_add_thread(thread_pool *pool, thread *th);
     void thread_pool_remove_thread(thread_pool *pool, thread *th);
     
-    void* thread_mgt(void* th);
+    void* thread_pool_loop(void* th);
     
 #ifdef	__cplusplus
 }

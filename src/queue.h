@@ -53,6 +53,7 @@ extern "C" {
    queue_item* queue_fetchone(queue *q, bool blocking);
    void queue_clear(queue *q);
    void queue_ping(queue *q);
+   size_t queue_count(queue *q);
 
 #ifdef	__cplusplus
 }

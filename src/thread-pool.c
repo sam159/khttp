@@ -78,7 +78,7 @@ void thread_pool_delete(thread_pool *pool) {
 void thread_pool_start(thread_pool *pool) {
     info("Starting thread pool %s", pool->name);
     pool->management_thread = thread_new(pool);
-    thread_start(pool->management_thread, thread_mgt);
+    thread_start(pool->management_thread, thread_pool_loop);
 }
 void thread_pool_stop(thread_pool *pool) {
     info("Stopping thread pool %s", pool->name);
@@ -98,7 +98,7 @@ void thread_pool_remove_thread(thread_pool *pool, thread *th) {
     pool->thread_count--;
 }
 
-void* thread_mgt(void* arg) {
+void* thread_pool_loop(void* arg) {
     thread* th = (thread*)arg;
     thread_pool *pool = th->pool;
     
@@ -122,18 +122,18 @@ void* thread_mgt(void* arg) {
     
     int64_t last_queue_count = 0;
     while(pool->shutdown == false) {
-        
-        int64_t queue_count_diff = pool->queue->count - last_queue_count;
+        size_t queue_size = queue_count(pool->queue);
+        int64_t queue_count_diff = queue_size - last_queue_count;
         int64_t watermark = pool->thread_count * pool->queue_factor;
         if (queue_count_diff > watermark && pool->thread_count < pool->max_threads) {
             //New thread
             thread *th = thread_new(pool);
             thread_pool_add_thread(pool, th);
-            last_queue_count = pool->queue->count;
+            last_queue_count = queue_size;
         } else if ((queue_count_diff*-1) > watermark && pool->thread_count > pool->min_threads) {
             //Remove thread (stop the first in the list)
             pool->threads->stop = true;
-            last_queue_count = pool->queue->count;
+            last_queue_count = queue_size;
         }
         
         //cleanup finished threads
@@ -156,7 +156,7 @@ void* thread_mgt(void* arg) {
         nanosleep(&loopdelay, NULL);
     }
     //Wait until queue is empty
-    while(pool->queue->count > 0) {
+    while(queue_count(pool->queue) > 0) {
         nanosleep(&loopdelay, NULL);
     }
     

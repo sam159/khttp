@@ -44,7 +44,6 @@ int main(int argc, char** argv) {
     log_register_add(log_new("stderr", stderr), true, LALL & ~(LINFO|LDEBUG));
     log_register_add(log_new("stdout", stdout), false, LDEBUG | LINFO);
     
-    
     mime_init(NULL);
     config_server *config = config_server_new();
     if (config_read_ini("khttpd.ini", config) < 0) {

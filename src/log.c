@@ -71,7 +71,9 @@ void*log_loop(void* arg) {
             if (l->running == false) {
                 break;
             }
-            fprintf(stderr, "log[%s] read failed: %s. logger aborted\n", l->name, strerror(errno));
+            char errnostr[64];
+            strerror_r(errno, errnostr, 64);
+            fprintf(stderr, "log[%s] read failed: %s. logger aborted\n", l->name, errnostr);
             log_stop(l);
             break;
         }

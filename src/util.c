@@ -79,7 +79,8 @@ char** str_splitlines(char *str, size_t *line_count) {
     }
     
     size_t i=0, linelen = 0;
-    char *line = strtok(str, "\n");
+    char* saveptr=NULL;
+    char *line = strtok_r(str, "\n", &saveptr);
     while(line) {
         linelen = strlen(line);
         result[i] = calloc(linelen+1, sizeof(char));
@@ -91,7 +92,7 @@ char** str_splitlines(char *str, size_t *line_count) {
             result[i][linelen-1] = '\0';
             result[i] = realloc(result[i], linelen);
         }
-        line = strtok(NULL, "\n");
+        line = strtok_r(NULL, "\n", &saveptr);
         i++;
     }
     

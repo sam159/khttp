@@ -172,7 +172,7 @@ void* thread_mgt(void* arg) {
     //Remove threads
     LL_FOREACH_SAFE(pool->threads, elem, tmp) {
         thread_stop(elem);
-        LL_DELETE(pool->threads, elem);
+        thread_pool_remove_thread(pool, elem);
         thread_delete(elem);
     }
 }

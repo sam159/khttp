@@ -41,6 +41,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/http-reader.o \
 	${OBJECTDIR}/src/http-server.o \
 	${OBJECTDIR}/src/http.o \
+	${OBJECTDIR}/src/log.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/queue.o \
@@ -102,6 +103,11 @@ ${OBJECTDIR}/src/http.o: nbproject/Makefile-${CND_CONF}.mk src/http.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http.o src/http.c
+
+${OBJECTDIR}/src/log.o: nbproject/Makefile-${CND_CONF}.mk src/log.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/log.o src/log.c
 
 ${OBJECTDIR}/src/main.o: nbproject/Makefile-${CND_CONF}.mk src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src

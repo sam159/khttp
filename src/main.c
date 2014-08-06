@@ -30,6 +30,7 @@
 #include "mime.h"
 #include "queue.h"
 #include "thread-pool.h"
+#include "log.h"
 
 int serverfd = 0;
 volatile static bool stop = false;
@@ -40,6 +41,9 @@ static void signal_int(int signum) {
 }
 
 int main(int argc, char** argv) {
+    log_register_add(log_new("stderr", stderr), true, LALL & ~(LINFO|LDEBUG));
+    log_register_add(log_new("stdout", stdout), false, LDEBUG | LINFO);
+    
     
     mime_init(NULL);
     config_server *config = config_server_new();
@@ -158,6 +162,7 @@ int main(int argc, char** argv) {
     mime_destroy();
     config_server_delete(config);
     svr_release(serverfd);
+    log_register_clear();
     serverfd = 0;
     
     return (EXIT_SUCCESS);

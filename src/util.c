@@ -9,39 +9,51 @@
 #include <string.h>
 #include <stdarg.h>
 #include <stdint.h>
+#include <errno.h>
 
 #include "util.h"
+#include "log.h"
 
 void fatal(char* fmt, ...) {
-    char msg[128] = {0};
+    char msg[LOG_LENGTH] = {0};
     va_list va;
     va_start(va, fmt);
-    vsnprintf(msg, 128, fmt, va);
+    vsnprintf(msg, LOG_LENGTH, fmt, va);
     va_end(va);
     
-    fprintf(stderr, "\n");
-    perror(msg);
+    LOG(LFATAL, msg);
+    log_register_clear();
     exit(EXIT_FAILURE);
 }
 void warning(bool use_errno, char* fmt, ...) {
-    char msg[128] = {0};
+    char msg[LOG_LENGTH] = {0};
     va_list va;
     va_start(va, fmt);
-    vsnprintf(msg, 128, fmt, va);
+    vsnprintf(msg, LOG_LENGTH, fmt, va);
     va_end(va);
     
     if (use_errno == true) {
-        perror(msg);
+        char *errnostr = calloc(64, sizeof(char));
+        strerror_r(errno, errnostr, 64);
+        char *errstr = calloc(strlen(msg)+strlen(errnostr)+3, sizeof(char));
+        strcat(errstr, msg);
+        strcat(errstr, ": ");
+        strcat(errstr, errnostr);
+        LOG(LWARNING, errstr);
+        free(errnostr);
+        free(errstr);
     } else {
-        fprintf(stderr, "%s\n", msg);
+        LOG(LWARNING, msg);
     }
 }
 void info(char* fmt, ...) {
+    char msg[LOG_LENGTH] = {0};
     va_list va;
     va_start(va, fmt);
-    vfprintf(stdout, fmt, va);
-    fputc('\n', stdout);
+    vsnprintf(msg, LOG_LENGTH, fmt, va);
     va_end(va);
+    
+    LOG(LINFO, msg);
 }
 
 char** str_splitlines(char *str, size_t *line_count) {

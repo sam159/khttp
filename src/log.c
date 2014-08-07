@@ -29,7 +29,7 @@ log* log_new(const char* name, FILE *output) {
     l->name = calloc(strlen(name)+1, sizeof(char));
     strcpy(l->name, name);
     l->running = false;
-    
+    l->output_closeonstop = false;
     return l;
 }
 void log_delete(log *l) {
@@ -59,6 +59,21 @@ bool log_start(log *l) {
     
     return true;
     
+}
+void log_stop(log *l) {
+    l->running = false;
+    close(l->pWrite);
+    if (pthread_equal(l->thread, pthread_self())!=0) {
+        pthread_detach(l->thread);
+    } else {
+        pthread_join(l->thread, NULL);
+    }
+    close(l->pRead);
+    if (l->output_closeonstop == true
+        && l->output != stdout
+        && l->output != stderr) {
+        fclose(l->output);
+    }
 }
 void*log_loop(void* arg) {
     log *l = (log*)arg;
@@ -90,16 +105,6 @@ void*log_loop(void* arg) {
     free(buf);
     free(timestr);
 }
-void log_stop(log *l) {
-    l->running = false;
-    close(l->pWrite);
-    if (pthread_equal(l->thread, pthread_self())!=0) {
-        pthread_detach(l->thread);
-    } else {
-        pthread_join(l->thread, NULL);
-    }
-    close(l->pRead);
-}
 void log_write(log *l, log_level level, const char* message) {
     if (l == NULL) {
         fprintf(stderr, "%s\n", message);
@@ -110,6 +115,7 @@ void log_write(log *l, log_level level, const char* message) {
     }
     
     char* msgstr = calloc(strlen(message)+1, sizeof(char));
+    strcpy(msgstr, message);
     log_msg *msg = log_msg_new(level, msgstr);
     write(l->pWrite, &msg, sizeof(log_msg*));
 }

@@ -265,7 +265,7 @@ FILE * server_generate_directory_index(config_host *hconfig, const char* dirpath
         char* file_mod_time = calloc(32, sizeof(char));
         ctime_r(&file_mtime, file_mod_time);
         
-        utstring_printf(index, "<tr><td>%s</td><td>%s</td><td>%s</td></tr>\r\n", uri, 
+        utstring_printf(index, "<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\r\n", uri, uri,
                 (filesize!=NULL)?filesize:"N/A", 
                 (file_mod_time!=NULL)?file_mod_time:"N/A");
         free(file_mod_time);

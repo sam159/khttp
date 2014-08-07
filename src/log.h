@@ -41,6 +41,7 @@ extern "C" {
         char* name;
         int pRead, pWrite;
         FILE *output;
+        bool output_closeonstop;
         pthread_t thread;
         bool running;
     } log;

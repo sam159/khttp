@@ -11,6 +11,7 @@
 #include <errno.h>
 #include <poll.h>
 #include <arpa/inet.h>
+#include <fcntl.h>
 #include "socket.h"
 #include "ut/utstring.h"
 #include "main.h"
@@ -127,11 +128,21 @@ void svr_listen(int fd, uint16_t port) {
         close(fd);
         fatal("Failed to bind to socket");
     }
-    if (listen(fd, 16) < 0) {
+    if (listen(fd, SOMAXCONN) < 0) {
         close(fd);
         fatal("Could not set socket to listen mode");
     }
     info("Listening on port %u", port);
+}
+void svr_setnonblock(int fd) {
+    int flags = fcntl(fd, F_GETFL, 0);
+    if (flags < 0) {
+        fatal("failed to set nonblocking on server socket");
+    }
+    flags |= O_NONBLOCK;
+    if (fcntl(fd, F_SETFL, flags) < 0) {
+        fatal("failed to set nonblocking on server socket");
+    }
 }
 void svr_release(int fd) {
     if (close(fd) < 0) {

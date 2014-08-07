@@ -47,6 +47,7 @@ extern "C" {
     
     int svr_create();
     void svr_listen(int fd, uint16_t port);
+    void svr_setnonblock(int fd);
     void svr_release(int fd);
     bool svr_canaccept(int fd);
     skt_info* svr_accept(int fd);

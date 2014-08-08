@@ -21,7 +21,20 @@ void fatal(char* fmt, ...) {
     vsnprintf(msg, LOG_LENGTH, fmt, va);
     va_end(va);
     
-    LOG(LFATAL, msg);
+    if (errno != 0) {
+        char *errnostr = calloc(64, sizeof(char));
+        strerror_r(errno, errnostr, 64);
+        char *errstr = calloc(strlen(msg)+strlen(errnostr)+3, sizeof(char));
+        strcat(errstr, msg);
+        strcat(errstr, ": ");
+        strcat(errstr, errnostr);
+        LOG(LFATAL, errstr);
+        free(errnostr);
+        free(errstr);
+    } else {
+        LOG(LFATAL, msg);
+    }
+    
     log_register_clear();
     exit(EXIT_FAILURE);
 }

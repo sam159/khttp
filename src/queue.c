@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <string.h>
 
 #include "queue.h"
 #include "util.h"
@@ -8,6 +9,13 @@
 
 queue_item* queue_item_new() {
     queue_item *item = calloc(1, sizeof(queue_item));
+    return item;
+}
+queue_item* queue_item_new2(char* tag, void* data) {
+    queue_item *item = queue_item_new();
+    item->tag[0] = '\0';
+    strncat(item->tag, tag, (sizeof(item->tag)/sizeof(char))+1);
+    item->data = data;
     return item;
 }
 void queue_item_delete(queue_item *item) {

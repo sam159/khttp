@@ -82,7 +82,9 @@ void*log_loop(void* arg) {
     time_t ctime;
     struct tm *tinfo = calloc(1,sizeof(struct tm));
     while(true) {
+        //Read next message pointer from pipe
         if (read(l->pRead, buf, sizeof(void*)) <= 0) {
+            //zero length indicates the write end closed (EOF)
             if (l->running == false) {
                 break;
             }

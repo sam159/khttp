@@ -24,6 +24,7 @@ extern "C" {
     } queue_item;
     
     queue_item* queue_item_new();
+    queue_item* queue_item_new2(char* tag, void* data);
     void queue_item_delete(queue_item *item);
     
     typedef struct queue {

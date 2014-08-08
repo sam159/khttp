@@ -111,7 +111,7 @@ char* skt_clientaddr(skt_info *skt) {
 
 int svr_create() {
     int fd = 0;
-    fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK, 0);
+    fd = socket(AF_INET, SOCK_STREAM | SOCK_NONBLOCK | SOCK_CLOEXEC, 0);
     if (fd < 0) {
         fatal("could not create socket");
     }
@@ -133,16 +133,6 @@ void svr_listen(int fd, uint16_t port) {
         fatal("Could not set socket to listen mode");
     }
     info("Listening on port %u", port);
-}
-void svr_setnonblock(int fd) {
-    int flags = fcntl(fd, F_GETFL, 0);
-    if (flags < 0) {
-        fatal("failed to set nonblocking on server socket");
-    }
-    flags |= O_NONBLOCK;
-    if (fcntl(fd, F_SETFL, flags) < 0) {
-        fatal("failed to set nonblocking on server socket");
-    }
 }
 void svr_release(int fd) {
     if (close(fd) < 0) {

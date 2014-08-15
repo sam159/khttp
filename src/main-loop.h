@@ -8,20 +8,13 @@
 #ifndef MAIN_LOOP_H
 #define	MAIN_LOOP_H
 
-#include <stdbool.h>
-#include <time.h>
-#include <pthread.h>
-
-#include "http_parser.h"
-
-#include "config.h"
-#include "thread-pool.h"
-#include "http.h"
-#include "data-buffer.h"
-
 #ifdef	__cplusplus
 extern "C" {
 #endif
+
+#include <stdbool.h>
+#include <time.h>
+#include <pthread.h>
     
 #define EPOLL_MAXEVENTS 128
     
@@ -32,7 +25,7 @@ extern "C" {
         POOL_READ, POOL_WRITE, POOL_WORKERS, POOL_DISK_READ
     } hmain_pool;
     
-    typedef enum skt_elem_hstate {HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD} skt_elem_hstate;
+    //typedef enum skt_elem_hstate {HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD} skt_elem_hstate;
     
     typedef struct hmain_connection {
         uint64_t cid;
@@ -64,7 +57,7 @@ extern "C" {
         bool request_complete;
         http_parser *parser;
         http_header *parser_current_header;
-        skt_elem_hstate parser_header_state;
+        int parser_header_state;
     } hmain_parse_data;
     
     hmain_connection* hmain_connection_new(int fd, hmain_status *status);

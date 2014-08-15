@@ -8,12 +8,14 @@
 #ifndef SERVER_SOCKET_H
 #define	SERVER_SOCKET_H
 
-#include "socket.h"
 
 #ifdef	__cplusplus
 extern "C" {
 #endif
 
+#include <stdint.h>
+#include "socket.h"
+    
     int server_socket_create();
     void server_socket_listen(int fd, uint16_t port);
     void server_socket_release(int fd);

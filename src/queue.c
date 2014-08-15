@@ -3,9 +3,9 @@
 #include <pthread.h>
 #include <string.h>
 
-#include "queue.h"
 #include "util.h"
 #include "ut/utlist.h"
+#include "queue.h"
 
 queue_item* queue_item_new() {
     static uint64_t nextid = 0;
@@ -18,7 +18,7 @@ queue_item* queue_item_new() {
 queue_item* queue_item_new2(char* tag, void* data) {
     queue_item *item = queue_item_new();
     item->tag[0] = '\0';
-    strncat(item->tag, tag, (sizeof(item->tag)/sizeof(char))+1);
+    strncat(item->tag, tag, (sizeof(item->tag)/sizeof(char))-1);
     item->data = data;
     return item;
 }
@@ -65,16 +65,35 @@ int queue_add(queue *q, queue_item *item) {
 }
 int queue_remove(queue *q, queue_item *item) {
     QUEUE_LOCK(q);
+    int result = 0;
     queue_item *elem, *tmp;
     DL_FOREACH_SAFE(q->list, elem, tmp) {
         if (elem == item) {
             DL_DELETE(q->list, elem);
             queue_item_delete(elem);
+            result = 1;
             break;
         }
     }
-    q->count--;
+    q->count -= result;
     QUEUE_UNLOCK(q);
+    return result;
+}
+int queue_remove_byptr(queue *q, void* ptr) {
+    QUEUE_LOCK(q);
+    
+    int result = 0;
+    queue_item *elem, *tmp;
+    DL_FOREACH_SAFE(q->list, elem, tmp) {
+        if (elem->data == ptr) {
+            DL_DELETE(q->list, elem);
+            queue_item_delete(elem);
+            result ++;
+        }
+    }
+    q->count -= result;
+    QUEUE_UNLOCK(q);
+    return result;
 }
 queue_item* queue_fetchone(queue *q, bool blocking) {
     queue_item *item = NULL;
@@ -91,8 +110,7 @@ queue_item* queue_fetchone(queue *q, bool blocking) {
             }
         }
         if (item != NULL) {
-            item = q->list;
-            DL_DELETE(q->list, q->list);
+            DL_DELETE(q->list, item);
             q->count--;
         }
     }

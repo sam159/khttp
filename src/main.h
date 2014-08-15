@@ -11,12 +11,6 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
-#define SERVER_NAME "KHTTP/0.1"
-
-#include <stdbool.h>
-#include "http.h"
-#include "util.h"
 
     int main(int argc, char** argv);
     

@@ -13,12 +13,11 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include <sys/types.h>
+#include <stddef.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <time.h>
-#include "http.h"
-#include "ut/utstring.h"
+    
 #include "data-buffer.h"
     
     typedef struct skt_info {

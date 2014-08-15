@@ -9,10 +9,11 @@
 #include <arpa/inet.h>
 #include <poll.h>
 #include <errno.h>
+#include <string.h>
 
 #include "socket.h"
 #include "server-socket.h"
-#include "main.h"
+#include "util.h"
 
 int server_socket_create() {
     int fd = 0;

@@ -4,10 +4,12 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
-#include "main.h"
 #include "ut/utarray.h"
 #include "ut/utstring.h"
+
 #include "http.h"
+#include "util.h"
+#include "version.h"
 
 void http_header_icd_init_f(void* elem) {
     memset(elem, 1, sizeof(http_header));

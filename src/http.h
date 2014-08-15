@@ -8,31 +8,33 @@
 #ifndef HTTP_H
 #define	HTTP_H
 
+#include <stddef.h>
+#include <stdint.h>
+#include <stdbool.h>
+
+#include "ut/utarray.h"
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
-    
-#include <stdint.h>
-#include <stdbool.h>
-#include "ut/utarray.h"
-    
-#define HEADER_CONTENT_TYPE "Content-Type" 
-#define HEADER_CONTENT_LENGTH "Content-Length"
-#define HEADER_USER_AGENT "User-Agent" 
-#define HEADER_SERVER "Server" 
-#define HEADER_LAST_MODIFIED "Last-Modified"
-#define HEADER_LOCATION "Location"
-#define HEADER_HOST "Host"
-#define HEADER_TRANSFER_ENCODING "Transfer-Encoding"
-#define HEADER_DATE "Date"
-#define HEADER_CONNECTION "Connection"
-#define HEADER_IF_MODIFIED_SINCE "If-Modified-Since"
-#define HEADER_IF_UNMODIFIED_SINCE "If-Unmodified-Since"
-    
-#define FORMAT_HEADER_DATE "%a, %d %h %Y %T %Z"
-#define DEFAULT_CONTENT_TYPE "text/plain"
 
-#define HTTP_CHUNK_MAXSIZE 1024*16
+#define HEADER_CONTENT_TYPE         "Content-Type" 
+#define HEADER_CONTENT_LENGTH       "Content-Length"
+#define HEADER_USER_AGENT           "User-Agent" 
+#define HEADER_SERVER               "Server" 
+#define HEADER_LAST_MODIFIED        "Last-Modified"
+#define HEADER_LOCATION             "Location"
+#define HEADER_HOST                 "Host"
+#define HEADER_TRANSFER_ENCODING    "Transfer-Encoding"
+#define HEADER_DATE                 "Date"
+#define HEADER_CONNECTION           "Connection"
+#define HEADER_IF_MODIFIED_SINCE    "If-Modified-Since"
+#define HEADER_IF_UNMODIFIED_SINCE  "If-Unmodified-Since"
+    
+#define FORMAT_HEADER_DATE          "%a, %d %h %Y %T %Z"
+#define DEFAULT_CONTENT_TYPE        "text/plain"
+
+#define HTTP_CHUNK_MAXSIZE          1024*16
     
     typedef enum http_request_method {
         METHOD_GET, METHOD_POST, METHOD_HEAD, METHOD_PUT, 

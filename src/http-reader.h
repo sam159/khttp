@@ -11,13 +11,21 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
-
-#include "http_parser.h"
-#include "http.h"
-#include "main.h"
-#include "main-loop.h"
     
-    http_parser_settings* parser_get_settings(hmain_parse_data *elem);
+#include <stddef.h>
+    
+#include "http.h"
+#include "http_parser.h"
+    
+    typedef struct request_parse_state {
+        http_request *current_request;
+        bool request_complete;
+        struct http_parser *parser;
+        http_header *parser_current_header;
+        enum {HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD} parser_header_state;
+    } request_parse_state;
+    
+    http_parser_settings* parser_get_settings();
     void parser_free_settings();
     
     int parser_cb_on_message_begin(http_parser* parser);

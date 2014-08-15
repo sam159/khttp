@@ -5,9 +5,10 @@
 #include <errno.h>
 #include <sys/types.h>
 #include <dirent.h>
+#include <string.h>
 
-#include "main.h"
 #include "config.h"
+#include "util.h"
 #include "ini.h"
 
 const char *default_servername = "localhost";

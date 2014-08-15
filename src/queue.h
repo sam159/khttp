@@ -53,6 +53,7 @@ extern "C" {
    void queue_delete(queue *q);
    int queue_add(queue *q, queue_item *item);
    int queue_remove(queue *q, queue_item *item);
+   int queue_remove_byptr(queue *q, void* ptr);
    queue_item* queue_fetchone(queue *q, bool blocking);
    void queue_unblock(queue *q, uint64_t itemid);
    void queue_clear(queue *q);

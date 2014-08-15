@@ -8,16 +8,18 @@
 #include <errno.h>
 #include <unistd.h>
 
-#include "main-loop.h"
 #include "mime.h"
 #include "log.h"
 #include "socket.h"
 #include "thread-pool.h"
-#include "queue.h"
 #include "log.h"
+#include "http_parser.h"
 #include "http.h"
 #include "http-reader.h"
 #include "server-socket.h"
+#include "util.h"
+#include "config.h"
+#include "main-loop.h"
 
 hmain_connection* hmain_connection_new(int fd, hmain_status *status) {
     static u_int64_t nextid = 1;
@@ -121,12 +123,10 @@ void hmain_setup(hmain_status *status) {
     status->pools[POOL_WORKERS] = pool;
     thread_pool_start(pool);
     
-    
 }
 void hmain_teardown(hmain_status *status) {
-    if (status == NULL) {
-        fatal("hmain is not setup");
-    }
+    assert(status!=NULL);
+    
     //Stop pools
     size_t pool_count = sizeof(status->pools) / sizeof(status->pools[0]);
     for(int i=0; i<pool_count; i++) {
@@ -238,7 +238,6 @@ void* thloop_read(void * arg) {
         }
         hmain_connection *conn = (hmain_connection*)item->data;
         CONN_LOCK(conn);
-        conn->isReading = true;
         
         char buffer[16*1024];
         int count;
@@ -269,7 +268,6 @@ void* thloop_read(void * arg) {
             }
             */
         } while(count > 0);
-        conn->isReading = false;
         CONN_UNLOCK(conn);
     }
 }
@@ -284,11 +282,10 @@ void* thloop_write(void * arg) {
         hmain_connection *conn = (hmain_connection*)item->data;
         do {
             CONN_LOCK(conn);
-            conn->isWriting = true;
+            
         
             
         }while(0);
-        conn->isWriting = false;
         CONN_UNLOCK(conn);
     }
 }

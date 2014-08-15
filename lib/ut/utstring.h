@@ -34,6 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define _UNUSED_ 
 #endif
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>

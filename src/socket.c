@@ -12,14 +12,15 @@
 #include <fcntl.h>
 #include <assert.h>
 
-#include "socket.h"
 #include "ut/utstring.h"
-#include "data-buffer.h"
-#include "main.h"
 #include "ut/utlist.h"
 
+#include "util.h"
+#include "data-buffer.h"
+#include "socket.h"
+
 u_int64_t skt_nextid() {
-    static u_int64_t id = 0;
+    static u_int64_t id = 1;
     return __atomic_fetch_add(&id, 1, __ATOMIC_SEQ_CST);
 }
 skt_info* skt_new(int fd) {

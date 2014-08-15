@@ -6,7 +6,6 @@
 #include <string.h>
 
 #include "ut/utlist.h"
-
 #include "data-buffer.h"
 
 data_buffer_list* data_buffer_list_new() {
@@ -31,7 +30,7 @@ void data_buffer_list_delete(data_buffer_list *list) {
     free(list->rdlock);
     free(list);
 }
-int data_buffer_list_append(data_buffer_list *list, const char* src, size_t n) {
+void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n) {
     assert(list!=NULL);
     assert(src!=NULL && n>0);
     BUFFER_LIST_WR_LOCK(list);

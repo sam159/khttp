@@ -14,6 +14,7 @@ extern "C" {
     
 #include <pthread.h>
 #include <stdbool.h>
+    
 #include "queue.h"
 
     typedef struct thread {

@@ -11,15 +11,18 @@
       <itemPath>src/http.h</itemPath>
       <itemPath>lib/http_parser.h</itemPath>
       <itemPath>lib/ini.h</itemPath>
+      <itemPath>src/khttp.h</itemPath>
       <itemPath>src/log.h</itemPath>
       <itemPath>src/main-loop.h</itemPath>
       <itemPath>src/main.h</itemPath>
       <itemPath>src/mime.h</itemPath>
       <itemPath>src/queue.h</itemPath>
+      <itemPath>src/server-connection.h</itemPath>
       <itemPath>src/server-socket.h</itemPath>
       <itemPath>src/socket.h</itemPath>
       <itemPath>src/thread-pool.h</itemPath>
       <itemPath>src/util.h</itemPath>
+      <itemPath>src/version.h</itemPath>
     </logicalFolder>
     <logicalFolder name="ResourceFiles"
                    displayName="Resource Files"
@@ -40,6 +43,7 @@
       <itemPath>src/main.c</itemPath>
       <itemPath>src/mime.c</itemPath>
       <itemPath>src/queue.c</itemPath>
+      <itemPath>src/server-connection.c</itemPath>
       <itemPath>src/server-socket.c</itemPath>
       <itemPath>src/socket.c</itemPath>
       <itemPath>src/thread-pool.c</itemPath>
@@ -127,6 +131,8 @@
       </item>
       <item path="src/http.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="src/khttp.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/log.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/log.h" ex="false" tool="3" flavor2="0">
@@ -147,6 +153,10 @@
       </item>
       <item path="src/queue.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="src/server-connection.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-connection.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/server-socket.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/server-socket.h" ex="false" tool="3" flavor2="0">
@@ -162,6 +172,8 @@
       <item path="src/util.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/util.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/version.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
     <conf name="Release" type="1">
@@ -229,6 +241,8 @@
       </item>
       <item path="src/http.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="src/khttp.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/log.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/log.h" ex="false" tool="3" flavor2="0">
@@ -249,6 +263,10 @@
       </item>
       <item path="src/queue.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="src/server-connection.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-connection.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/server-socket.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/server-socket.h" ex="false" tool="3" flavor2="0">
@@ -264,6 +282,8 @@
       <item path="src/util.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/util.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/version.h" ex="false" tool="3" flavor2="0">
       </item>
     </conf>
   </confs>

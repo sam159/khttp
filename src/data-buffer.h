@@ -36,7 +36,7 @@ extern "C" {
     
     data_buffer_list* data_buffer_list_new();
     void data_buffer_list_delete(data_buffer_list *list);
-    int data_buffer_list_append(data_buffer_list *list, const char* src, size_t n);
+    void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n);
     void data_buffer_list_lock(data_buffer_list *list, bool rd, bool wr);
     void data_buffer_list_unlock(data_buffer_list *list, bool rd, bool wr);
     

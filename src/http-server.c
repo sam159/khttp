@@ -9,13 +9,14 @@
 #include <dirent.h>
 #include <time.h>
 
+#include "ut/utstring.h"
+
 #include "http_parser.h"
 #include "http.h"
-#include "main.h"
 #include "config.h"
 #include "http-server.h"
 #include "mime.h"
-#include "ut/utstring.h"
+#include "util.h"
 
 http_response* server_process_request(config_server* config, http_request *request) {
     http_response* response = NULL;

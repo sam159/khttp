@@ -12,12 +12,12 @@
 extern "C" {
 #endif
 
+#include <stdio.h>
 #include <stdbool.h>
 #include <time.h>
 #include <dirent.h>
+
 #include "http.h"
-#include "main.h"
-#include "config.h"
     
     typedef struct server_file_result {
         bool error;

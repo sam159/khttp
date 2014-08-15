@@ -8,11 +8,13 @@
 #ifndef CONFIG_H
 #define	CONFIG_H
 
+
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    
+#include <stdint.h>
 #include <stdbool.h>
-#include "main.h"
     
 #define CONFIG_SERVER_FOREACH_HOST(config, elem)                    \
     elem = config->hosts != NULL ? config->hosts[0] : NULL;         \
@@ -32,7 +34,6 @@ extern "C" {
         char *servername;
         char *administrator;
         uint16_t listen_port;
-        
         config_host **hosts;
         size_t host_count;
     } config_server;

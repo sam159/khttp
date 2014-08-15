@@ -15,8 +15,9 @@ extern "C" {
 #include "http_parser.h"
 #include "http.h"
 #include "main.h"
+#include "main-loop.h"
     
-    http_parser_settings* parser_get_settings(skt_elem *elem);
+    http_parser_settings* parser_get_settings(hmain_parse_data *elem);
     void parser_free_settings();
     
     int parser_cb_on_message_begin(http_parser* parser);

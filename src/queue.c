@@ -8,7 +8,11 @@
 #include "ut/utlist.h"
 
 queue_item* queue_item_new() {
+    static uint64_t nextid = 0;
+    
     queue_item *item = calloc(1, sizeof(queue_item));
+    item->id = __atomic_fetch_add(&nextid, 1, __ATOMIC_SEQ_CST);
+    item->blocked = false;
     return item;
 }
 queue_item* queue_item_new2(char* tag, void* data) {
@@ -53,7 +57,9 @@ int queue_add(queue *q, queue_item *item) {
     QUEUE_LOCK(q);
     DL_APPEND(q->list, item);
     q->count++;
-    pthread_cond_signal(q->cond);
+    if (item->blocked == false) {
+        pthread_cond_signal(q->cond);
+    }
     QUEUE_UNLOCK(q);
     return 0;
 }
@@ -77,12 +83,38 @@ queue_item* queue_fetchone(queue *q, bool blocking) {
         pthread_cond_wait(q->cond, q->mutex);
     }
     if (q->count > 0) {
-        item = q->list;
-        DL_DELETE(q->list, q->list);
-        q->count--;
+        queue_item *elem;
+        LL_FOREACH(q->list, elem) {
+            if (elem->blocked == false) {
+                item = elem;
+                break;
+            }
+        }
+        if (item != NULL) {
+            item = q->list;
+            DL_DELETE(q->list, q->list);
+            q->count--;
+        }
     }
     QUEUE_UNLOCK(q);
     return item;
+}
+void queue_unblock(queue *q, uint64_t itemid) {
+    queue_item *item=NULL, *elem=NULL;
+    QUEUE_LOCK(q);
+    LL_FOREACH(q->list, elem) {
+        if (elem->id == itemid) {
+            if (elem->blocked == true) {
+                elem->blocked = false;
+                item = elem;
+            }
+            break;
+        }
+    }
+    if (item != NULL) {
+        pthread_cond_signal(q->cond);
+    }
+    QUEUE_UNLOCK(q);
 }
 void queue_clear(queue *q) {
     QUEUE_LOCK(q);

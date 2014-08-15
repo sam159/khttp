@@ -17,9 +17,11 @@ extern "C" {
 #include <stdbool.h>
     
     typedef struct queue_item {
+        uint64_t id;
         struct queue_item *prev;
         struct queue_item *next;
         char tag[16];
+        bool blocked;
         void *data;
     } queue_item;
     
@@ -52,6 +54,7 @@ extern "C" {
    int queue_add(queue *q, queue_item *item);
    int queue_remove(queue *q, queue_item *item);
    queue_item* queue_fetchone(queue *q, bool blocking);
+   void queue_unblock(queue *q, uint64_t itemid);
    void queue_clear(queue *q);
    void queue_ping(queue *q);
    size_t queue_count(queue *q);

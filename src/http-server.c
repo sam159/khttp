@@ -15,6 +15,7 @@
 #include "config.h"
 #include "http-server.h"
 #include "mime.h"
+#include "ut/utstring.h"
 
 http_response* server_process_request(config_server* config, http_request *request) {
     http_response* response = NULL;

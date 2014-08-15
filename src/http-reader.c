@@ -7,16 +7,17 @@
 #include "http.h"
 #include "http_parser.h"
 #include "http-reader.h"
+#include "main-loop.h"
 
 #define GET_CB_STR(str, at, length) do { \
     str = calloc(length+1, sizeof(char));\
     strncpy(str, at, length);\
 }while(0);
-#define SKT(parser) ((skt_elem*)parser->data)
+#define SKT(parser) ((hmain_parse_data*)parser->data)
 
 http_parser_settings *parser_settings = NULL;
 
-http_parser_settings* parser_get_settings(skt_elem *elem) {
+http_parser_settings* parser_get_settings(hmain_parse_data *data) {
     if (parser_settings == NULL) {
         parser_settings = calloc(1, sizeof(http_parser_settings));
         parser_settings->on_body = parser_cb_on_body;

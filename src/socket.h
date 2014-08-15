@@ -19,39 +19,26 @@ extern "C" {
 #include <time.h>
 #include "http.h"
 #include "ut/utstring.h"
+#include "data-buffer.h"
     
-    typedef struct skt_info skt_info;
-    
-    struct skt_info {
+    typedef struct skt_info {
         u_int64_t id;
         int fd;
-        time_t time_opened;
-        time_t last_act;
-        UT_string *read;
-        UT_string *write;
-        bool close;
-        bool close_afterwrite;
-        bool closed;
         struct sockaddr_in* clientaddr;
-    };
+        time_t time_opened;
+        bool error;
+    } skt_info;
     
     u_int64_t skt_nextid();
     skt_info* skt_new(int fd);
     void skt_delete(skt_info *skt);
     
     bool skt_canread(skt_info *skt);
-    uint32_t skt_read(skt_info *skt);
-    uint32_t skt_write(skt_info *skt);
+    size_t skt_read(skt_info *skt, char* buffer, size_t bufferlen);
+    size_t skt_write(skt_info* skt, char* data, size_t len);
+    int skt_write_data_buffer(skt_info *skt, data_buffer_list *list);
     void skt_close(skt_info *skt);
-    char* skt_clientaddr(skt_info *skt);
-    
-    int svr_create();
-    void svr_listen(int fd, uint16_t port);
-    void svr_release(int fd);
-    bool svr_canaccept(int fd);
-    skt_info* svr_accept(int fd);
-    
-
+    const char* skt_clientaddr(skt_info *skt);
 
 #ifdef	__cplusplus
 }

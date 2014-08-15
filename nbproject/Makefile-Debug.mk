@@ -38,6 +38,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/lib/http_parser.o \
 	${OBJECTDIR}/lib/ini.o \
 	${OBJECTDIR}/src/config.o \
+	${OBJECTDIR}/src/data-buffer.o \
 	${OBJECTDIR}/src/http-reader.o \
 	${OBJECTDIR}/src/http-server.o \
 	${OBJECTDIR}/src/http.o \
@@ -46,6 +47,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/queue.o \
+	${OBJECTDIR}/src/server-socket.o \
 	${OBJECTDIR}/src/socket.o \
 	${OBJECTDIR}/src/thread-pool.o \
 	${OBJECTDIR}/src/util.o
@@ -90,6 +92,11 @@ ${OBJECTDIR}/src/config.o: nbproject/Makefile-${CND_CONF}.mk src/config.c
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/config.o src/config.c
 
+${OBJECTDIR}/src/data-buffer.o: nbproject/Makefile-${CND_CONF}.mk src/data-buffer.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/data-buffer.o src/data-buffer.c
+
 ${OBJECTDIR}/src/http-reader.o: nbproject/Makefile-${CND_CONF}.mk src/http-reader.c 
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
@@ -129,6 +136,11 @@ ${OBJECTDIR}/src/queue.o: nbproject/Makefile-${CND_CONF}.mk src/queue.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/queue.o src/queue.c
+
+${OBJECTDIR}/src/server-socket.o: nbproject/Makefile-${CND_CONF}.mk src/server-socket.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-socket.o src/server-socket.c
 
 ${OBJECTDIR}/src/socket.o: nbproject/Makefile-${CND_CONF}.mk src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src

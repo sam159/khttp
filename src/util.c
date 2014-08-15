@@ -22,14 +22,17 @@ void fatal(char* fmt, ...) {
     va_end(va);
     
     if (errno != 0) {
-        char *errnostr = calloc(64, sizeof(char));
-        strerror_r(errno, errnostr, 64);
+        char *errnostr_buf = calloc(64, sizeof(char));
+        char *errnostr = strerror_r(errno, errnostr_buf, 64);
+        if (strlen(errnostr) == 0) {
+            snprintf(errnostr, 64, "Code(%d)", errno);
+        }
         char *errstr = calloc(strlen(msg)+strlen(errnostr)+3, sizeof(char));
         strcat(errstr, msg);
         strcat(errstr, ": ");
         strcat(errstr, errnostr);
         LOG(LFATAL, errstr);
-        free(errnostr);
+        free(errnostr_buf);
         free(errstr);
     } else {
         LOG(LFATAL, msg);
@@ -46,14 +49,17 @@ void warning(bool use_errno, char* fmt, ...) {
     va_end(va);
     
     if (use_errno == true) {
-        char *errnostr = calloc(64, sizeof(char));
-        strerror_r(errno, errnostr, 64);
+        char *errnostr_buf = calloc(64, sizeof(char));
+        char *errnostr = strerror_r(errno, errnostr_buf, 64);
+        if (strlen(errnostr) == 0) {
+            snprintf(errnostr, 64, "Code(%d)", errno);
+        }
         char *errstr = calloc(strlen(msg)+strlen(errnostr)+3, sizeof(char));
         strcat(errstr, msg);
         strcat(errstr, ": ");
         strcat(errstr, errnostr);
-        LOG(LWARNING, errstr);
-        free(errnostr);
+        LOG(LFATAL, errstr);
+        free(errnostr_buf);
         free(errstr);
     } else {
         LOG(LWARNING, msg);

@@ -2,10 +2,12 @@
 #include <stdlib.h>
 #include <pthread.h>
 #include <string.h>
+#include <assert.h>
 
 #include "util.h"
 #include "ut/utlist.h"
 #include "queue.h"
+#include "log.h"
 
 queue_item* queue_item_new() {
     static uint64_t nextid = 0;
@@ -18,7 +20,7 @@ queue_item* queue_item_new() {
 queue_item* queue_item_new2(char* tag, void* data) {
     queue_item *item = queue_item_new();
     item->tag[0] = '\0';
-    strncat(item->tag, tag, (sizeof(item->tag)/sizeof(char))-1);
+    strncat(item->tag, tag, QUEUE_ITEM_TAG_LEN-1);
     item->data = data;
     return item;
 }
@@ -38,22 +40,32 @@ queue* queue_new() {
     if (pthread_cond_init(q->cond, NULL) != 0) {
         fatal("Failed to init queue cond");
     }
+    q->processing_cond = calloc(1, sizeof(pthread_cond_t));
+    if (pthread_cond_init(q->processing_cond, NULL) != 0) {
+        fatal("Failed to init queue processing cond");
+    }
     
     return q;
 }
 void queue_delete(queue *q) {
-    queue_item *elem, *tmp;
-    DL_FOREACH_SAFE(q->list, elem, tmp) {
-        queue_item_delete(elem);
-        DL_DELETE(q->list, elem);
+    assert(q!=NULL);
+    size_t pending_count = 0;
+    QUEUE_PENDING_COUNT(q, pending_count);
+    if (pending_count > 0) {
+        warning(false, "queue has pending items at deletion");
     }
+    queue_clear(q);
     pthread_mutex_destroy(q->mutex);
     free(q->mutex);
     pthread_cond_destroy(q->cond);
     free(q->cond);
+    pthread_cond_destroy(q->processing_cond);
+    free(q->processing_cond);
     free(q);
 }
 int queue_add(queue *q, queue_item *item) {
+    assert(q!=NULL);
+    assert(item!=NULL);
     QUEUE_LOCK(q);
     DL_APPEND(q->list, item);
     q->count++;
@@ -64,6 +76,8 @@ int queue_add(queue *q, queue_item *item) {
     return 0;
 }
 int queue_remove(queue *q, queue_item *item) {
+    assert(q!=NULL);
+    assert(item!=NULL);
     QUEUE_LOCK(q);
     int result = 0;
     queue_item *elem, *tmp;
@@ -80,6 +94,7 @@ int queue_remove(queue *q, queue_item *item) {
     return result;
 }
 int queue_remove_byptr(queue *q, void* ptr) {
+    assert(q!=NULL);
     QUEUE_LOCK(q);
     
     int result = 0;
@@ -96,6 +111,7 @@ int queue_remove_byptr(queue *q, void* ptr) {
     return result;
 }
 queue_item* queue_fetchone(queue *q, bool blocking) {
+    assert(q!=NULL);
     queue_item *item = NULL;
     QUEUE_LOCK(q);
     if (q->count == 0 && blocking == true) {
@@ -112,12 +128,17 @@ queue_item* queue_fetchone(queue *q, bool blocking) {
         if (item != NULL) {
             DL_DELETE(q->list, item);
             q->count--;
+            //Add to processing list
+            queue_pending_item *token = calloc(1, sizeof(queue_pending_item));
+            token->qid = item->id;
+            LL_APPEND(q->processing, token);
         }
     }
     QUEUE_UNLOCK(q);
     return item;
 }
 void queue_unblock(queue *q, uint64_t itemid) {
+    assert(q!=NULL);
     queue_item *item=NULL, *elem=NULL;
     QUEUE_LOCK(q);
     LL_FOREACH(q->list, elem) {
@@ -135,24 +156,65 @@ void queue_unblock(queue *q, uint64_t itemid) {
     QUEUE_UNLOCK(q);
 }
 void queue_clear(queue *q) {
+    assert(q!=NULL);
     QUEUE_LOCK(q);
-    queue_item *elem, *tmp;
-    DL_FOREACH_SAFE(q->list, elem, tmp) {
-        queue_item_delete(elem);
-        DL_DELETE(q->list, elem);
+    {
+        queue_item *elem, *tmp;
+        DL_FOREACH_SAFE(q->list, elem, tmp) {
+            queue_item_delete(elem);
+            DL_DELETE(q->list, elem);
+        }
     }
-    pthread_cond_broadcast(q->cond);
+    {
+        queue_pending_item *elem, *tmp;
+        LL_FOREACH_SAFE(q->processing, elem, tmp) {
+            LL_DELETE(q->processing, elem);
+            free(elem);
+        }
+    }
     QUEUE_UNLOCK(q);
 }
 void queue_ping(queue *q) {
+    assert(q!=NULL);
     QUEUE_LOCK(q);
     pthread_cond_broadcast(q->cond);
     QUEUE_UNLOCK(q);
 }
 size_t queue_count(queue *q) {
+    assert(q!=NULL);
     size_t count;
     QUEUE_LOCK(q);
     count = q->count;
     QUEUE_UNLOCK(q);
     return count;
+}
+
+void queue_return_item(queue *q, queue_item *item, bool finished) {
+    assert(q!=NULL);
+    assert(item!=NULL);
+    
+    QUEUE_LOCK(q);
+    QUEUE_PENDING_REMOVE(q, item->id);
+    QUEUE_UNLOCK(q);
+    
+    if (finished == true) {
+        queue_item_delete(item);
+    } else {
+        queue_add(q, item);
+    }
+    QUEUE_LOCK(q);
+    pthread_cond_broadcast(q->processing_cond);
+    QUEUE_UNLOCK(q);
+}
+void queue_waitfor_pending(queue *q, uint64_t itemid) {
+    QUEUE_LOCK(q);
+    
+    bool found;
+    QUEUE_HAS_PENDING(q, itemid, found);
+    while(found == true) {
+        pthread_cond_wait(q->processing_cond, q->mutex);
+        
+        QUEUE_HAS_PENDING(q, itemid, found);
+    }
+    QUEUE_UNLOCK(q);
 }

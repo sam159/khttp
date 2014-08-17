@@ -49,6 +49,8 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/queue.o \
 	${OBJECTDIR}/src/server-connection.o \
 	${OBJECTDIR}/src/server-socket.o \
+	${OBJECTDIR}/src/server-state.o \
+	${OBJECTDIR}/src/server.o \
 	${OBJECTDIR}/src/socket.o \
 	${OBJECTDIR}/src/thread-pool.o \
 	${OBJECTDIR}/src/util.o
@@ -147,6 +149,16 @@ ${OBJECTDIR}/src/server-socket.o: nbproject/Makefile-${CND_CONF}.mk src/server-s
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-socket.o src/server-socket.c
+
+${OBJECTDIR}/src/server-state.o: nbproject/Makefile-${CND_CONF}.mk src/server-state.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-state.o src/server-state.c
+
+${OBJECTDIR}/src/server.o: nbproject/Makefile-${CND_CONF}.mk src/server.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server.o src/server.c
 
 ${OBJECTDIR}/src/socket.o: nbproject/Makefile-${CND_CONF}.mk src/socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src

@@ -23,9 +23,9 @@ u_int64_t skt_nextid() {
     static u_int64_t id = 1;
     return __atomic_fetch_add(&id, 1, __ATOMIC_SEQ_CST);
 }
-skt_info* skt_new(int fd) {
+socket_info* skt_new(int fd) {
     assert(fd>0);
-    skt_info* skt = calloc(1, sizeof(skt_info));
+    socket_info* skt = calloc(1, sizeof(socket_info));
     skt->id = skt_nextid();
     skt->fd = fd;
     skt->time_opened = time(NULL);
@@ -33,13 +33,14 @@ skt_info* skt_new(int fd) {
     skt->clientaddr = NULL;
     return skt;
 }
-void skt_delete(skt_info* skt) {
+
+void skt_delete(socket_info* skt) {
     assert(skt != NULL);
     free(skt->clientaddr);
     free(skt);
 }
 
-bool skt_canread(skt_info* skt) {
+bool skt_canread(socket_info* skt) {
     assert(skt != NULL);
     int len = 0;
     if (ioctl(skt->fd, FIONREAD, &len) < 0) {
@@ -48,7 +49,7 @@ bool skt_canread(skt_info* skt) {
     }
     return len > 0;
 }
-size_t skt_read(skt_info* skt, char* buffer, size_t bufferlen) {
+size_t skt_read(socket_info* skt, char* buffer, size_t bufferlen) {
     assert(skt != NULL);
     int result = read(skt->fd, buffer, bufferlen);
     if (result < 0) {
@@ -60,7 +61,7 @@ size_t skt_read(skt_info* skt, char* buffer, size_t bufferlen) {
     }
     return result; //Number of bytes read
 }
-size_t skt_write(skt_info* skt, char* data, size_t len) {
+size_t skt_write(socket_info* skt, char* data, size_t len) {
     assert(skt != NULL);
     assert(data != NULL);
     
@@ -74,7 +75,7 @@ size_t skt_write(skt_info* skt, char* data, size_t len) {
     }
     return result; //bytes written
 }
-int skt_write_data_buffer(skt_info *skt, data_buffer_list *list) {
+int skt_data_buffer(socket_info *skt, data_buffer_list *list) {
     assert(skt != NULL);
     assert(list != NULL);
     BUFFER_LIST_RD_LOCK(list);
@@ -108,13 +109,13 @@ int skt_write_data_buffer(skt_info *skt, data_buffer_list *list) {
     
     return result;
 }
-void skt_close(skt_info* skt) {
+void skt_close(socket_info* skt) {
     assert(skt != NULL);
     if (close(skt->fd) < 0) {
         warning(true, "error closing socket");
     }
 }
-const char* skt_clientaddr(skt_info *skt) {
+const char* skt_clientaddr(socket_info *skt) {
     assert(skt != NULL);
     char *tmp = calloc(INET_ADDRSTRLEN, sizeof(char));
     const char* address = inet_ntop(AF_INET, &skt->clientaddr->sin_addr, tmp, INET_ADDRSTRLEN);

@@ -16,26 +16,8 @@ extern "C" {
 #include <stdint.h>
 #include <stdbool.h>
     
-    typedef struct queue_item {
-        uint64_t id;
-        struct queue_item *prev;
-        struct queue_item *next;
-        char tag[16];
-        bool blocked;
-        void *data;
-    } queue_item;
+#define QUEUE_ITEM_TAG_LEN  16
     
-    queue_item* queue_item_new();
-    queue_item* queue_item_new2(char* tag, void* data);
-    void queue_item_delete(queue_item *item);
-    
-    typedef struct queue {
-        queue_item *list;
-        uint64_t count;
-        pthread_mutex_t *mutex;
-        pthread_cond_t *cond;
-   } queue;
-   
 #define QUEUE_LOCK(q)                           \
     do {                                        \
         if (pthread_mutex_lock(q->mutex)!=0) {  \
@@ -48,6 +30,60 @@ extern "C" {
             fatal("Could not unlock queue");    \
         }                                       \
     } while(0)
+    
+#define QUEUE_PENDING_REMOVE(q, itemid)             \
+    do {                                            \
+        queue_pending_item *elem, *tmp;             \
+        LL_FOREACH_SAFE(q->processing, elem, tmp) { \
+            if (elem->qid == itemid) {              \
+                LL_DELETE(q->processing, elem);     \
+                free(elem);                         \
+            }                                       \
+        }                                           \
+    } while(0)
+#define QUEUE_HAS_PENDING(q, itemid, found)         \
+    do {                                            \
+        found = false;                              \
+        queue_pending_item *elem;                   \
+        LL_FOREACH(q->processing, elem) {           \
+            if (elem->qid == itemid) {              \
+                found = true;                       \
+                break;                              \
+            }                                       \
+        }                                           \
+    } while(0)
+#define QUEUE_PENDING_COUNT(q, counter)         \
+    do {                                        \
+        queue_pending_item *elem;               \
+        LL_COUNT(q->processing, elem, counter); \
+    } while(0)
+    
+    typedef struct queue_item {
+        uint64_t id;
+        struct queue_item *prev;
+        struct queue_item *next;
+        char tag[QUEUE_ITEM_TAG_LEN];
+        bool blocked;
+        void *data;
+    } queue_item;
+    
+    queue_item* queue_item_new();
+    queue_item* queue_item_new2(char* tag, void* data);
+    void queue_item_delete(queue_item *item);
+    
+    typedef struct queue_pending_item {
+        uint64_t qid;
+        struct queue_pending_item *next;
+    } queue_pending_item;
+    
+    typedef struct queue {
+        queue_item *list;
+        uint64_t count;
+        queue_pending_item *processing;
+        pthread_mutex_t *mutex;
+        pthread_cond_t *cond;
+        pthread_cond_t *processing_cond;
+   } queue;
    
    queue* queue_new();
    void queue_delete(queue *q);
@@ -59,6 +95,8 @@ extern "C" {
    void queue_clear(queue *q);
    void queue_ping(queue *q);
    size_t queue_count(queue *q);
+   void queue_return_item(queue *q, queue_item *item, bool finished);
+   void queue_pending_wait(queue *q, uint64_t itemid);
 
 #ifdef	__cplusplus
 }

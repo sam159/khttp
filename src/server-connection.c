@@ -6,12 +6,12 @@
 #include <assert.h>
 
 #include "http.h"
+#include "socket.h"
 #include "server-connection.h"
 
-
-server_connection* server_connection_new(skt_info *skt) {
+server_connection* server_connection_new(socket_info *skt) {
     static uint64_t nextid = 1;
-    assert(skt!=null);
+    assert(skt!=NULL);
     
     server_connection *conn = calloc(1, sizeof(server_connection));
     conn->id = __atomic_fetch_add(&nextid, 1, __ATOMIC_SEQ_CST);

@@ -63,7 +63,7 @@ bool server_socket_canaccept(int fd) {
     free(pfd);
     return false;
 }
-skt_info* server_socket_accept(int fd, int flags) {
+socket_info* server_socket_accept(int fd, int flags) {
     struct sockaddr_in* clientaddr = calloc(1, sizeof(struct sockaddr_in));
     
     int clientfd=0;
@@ -74,7 +74,7 @@ skt_info* server_socket_accept(int fd, int flags) {
         return NULL;
     }
     
-    skt_info* skt = skt_new(clientfd);
+    socket_info* skt = skt_new(clientfd);
     skt->clientaddr = clientaddr;
     skt->fd = clientfd;
     

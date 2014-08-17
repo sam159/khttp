@@ -19,6 +19,8 @@
       <itemPath>src/queue.h</itemPath>
       <itemPath>src/server-connection.h</itemPath>
       <itemPath>src/server-socket.h</itemPath>
+      <itemPath>src/server-state.h</itemPath>
+      <itemPath>src/server.h</itemPath>
       <itemPath>src/socket.h</itemPath>
       <itemPath>src/thread-pool.h</itemPath>
       <itemPath>src/util.h</itemPath>
@@ -45,6 +47,8 @@
       <itemPath>src/queue.c</itemPath>
       <itemPath>src/server-connection.c</itemPath>
       <itemPath>src/server-socket.c</itemPath>
+      <itemPath>src/server-state.c</itemPath>
+      <itemPath>src/server.c</itemPath>
       <itemPath>src/socket.c</itemPath>
       <itemPath>src/thread-pool.c</itemPath>
       <itemPath>src/util.c</itemPath>
@@ -161,6 +165,14 @@
       </item>
       <item path="src/server-socket.h" ex="false" tool="3" flavor2="0">
       </item>
+      <item path="src/server-state.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-state.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/server.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server.h" ex="false" tool="3" flavor2="0">
+      </item>
       <item path="src/socket.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/socket.h" ex="false" tool="3" flavor2="0">
@@ -270,6 +282,14 @@
       <item path="src/server-socket.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/server-socket.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/server-state.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-state.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/server.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/socket.c" ex="false" tool="0" flavor2="0">
       </item>

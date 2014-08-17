@@ -20,7 +20,7 @@ extern "C" {
     void server_socket_listen(int fd, uint16_t port);
     void server_socket_release(int fd);
     bool server_socket_canaccept(int fd);
-    skt_info* server_socket_accept(int fd, int flags);
+    socket_info* server_socket_accept(int fd, int flags);
 
 
 #ifdef	__cplusplus

@@ -12,7 +12,6 @@
 #include "log.h"
 #include "socket.h"
 #include "thread-pool.h"
-#include "log.h"
 #include "http_parser.h"
 #include "http.h"
 #include "http-reader.h"

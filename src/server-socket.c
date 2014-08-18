@@ -7,13 +7,14 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-#include <poll.h>
+#include <sys/epoll.h>
 #include <errno.h>
 #include <string.h>
+#include <assert.h>
 
+#include "util.h"
 #include "socket.h"
 #include "server-socket.h"
-#include "util.h"
 
 int server_socket_create() {
     int fd = 0;
@@ -24,6 +25,9 @@ int server_socket_create() {
     return fd;
 }
 void server_socket_listen(int fd, uint16_t port) {
+    assert(fd>=0);
+    assert(port>0);
+    
     struct sockaddr_in server_address;
     memset(&server_address, 0, sizeof server_address);
     server_address.sin_family = AF_INET;
@@ -40,30 +44,35 @@ void server_socket_listen(int fd, uint16_t port) {
     }
     info("Listening on port %u", port);
 }
+void server_socket_listen_epoll(int fd, uint16_t port, int *out_epfd) {
+    assert(out_epfd != NULL);
+    server_socket_listen(fd, port);
+    
+    int epfd = 0;
+    
+    //Open epoll socket
+    epfd = epoll_create1(0);
+    if (epfd < 0) {
+        fatal("Failed to create epollfd");
+    }
+    
+    //Register socket with epoll
+    struct epoll_event svr_event;
+    svr_event.data.fd = fd;
+    svr_event.events = EPOLLIN | EPOLLET;
+    if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &svr_event) < 0) {
+        fatal("Could not register server socket with epoll");
+    }
+    *out_epfd = epfd;
+}
 void server_socket_release(int fd) {
+    assert(fd>=0);
     if (close(fd) < 0) {
         warning(true, "could not close socket");
     }
 }
-bool server_socket_canaccept(int fd) {
-    struct pollfd* pfd = calloc(1, sizeof(struct pollfd));
-    
-    pfd[0].fd = fd;
-    pfd[0].events = POLLIN;
-    
-    if (poll(pfd, 1, 50/*ms*/) < 0) {
-        warning(true, "poll failed");
-        free(pfd);
-        return false;
-    }
-    if ((pfd[0].revents & POLLIN) == POLLIN) {
-        free(pfd);
-        return true;
-    }
-    free(pfd);
-    return false;
-}
 socket_info* server_socket_accept(int fd, int flags) {
+    assert(fd>=0);
     struct sockaddr_in* clientaddr = calloc(1, sizeof(struct sockaddr_in));
     
     int clientfd=0;

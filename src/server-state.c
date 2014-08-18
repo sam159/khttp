@@ -10,6 +10,7 @@
 #include "server-state.h"
 #include "queue.h"
 #include "thread-pool.h"
+#include "main-loop.h"
 
 server_status* server_status_new(config_server *config) {
     assert(config!=NULL);
@@ -40,7 +41,7 @@ void server_status_delete(server_status *status) {
     free(status);
 }
 
-void server_start_pools(server_status *status) {
+void server_start_pools(server_status *status, thread_func pool_functions[]) {
     assert(status!=NULL);
     assert(status->pools[0]==NULL);
     
@@ -48,21 +49,21 @@ void server_start_pools(server_status *status) {
     thread_pool *pool = thread_pool_new("read", queue_new());
     pool->min_threads = 1;
     pool->max_threads = 2;
-    //pool->func = thloop_read;
+    pool->func = pool_functions[POOL_READ];
     status->pools[POOL_READ] = pool;
     thread_pool_start(pool);
     
     pool = thread_pool_new("write", queue_new());
     pool->min_threads = 1;
     pool->max_threads = 2;
-    //pool->func = thloop_write;
+    pool->func = pool_functions[POOL_WRITE];
     status->pools[POOL_WRITE] = pool;
     thread_pool_start(pool);
     
     pool = thread_pool_new("worker", queue_new());
     pool->min_threads = 1;
     pool->max_threads = 5;
-    //pool->func = thloop_worker;
+    pool->func = pool_functions[POOL_WORKER];
     status->pools[POOL_WORKER] = pool;
     thread_pool_start(pool);
 }

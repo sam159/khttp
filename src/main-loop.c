@@ -98,28 +98,24 @@ void hmain_setup(hmain_status *status) {
     pool->min_threads = 1;
     pool->max_threads = 2;
     pool->func = thloop_read;
-    status->pools[POOL_READ] = pool;
     thread_pool_start(pool);
     
     pool = thread_pool_new("write", queue_new());
     pool->min_threads = 1;
     pool->max_threads = 2;
     pool->func = thloop_write;
-    status->pools[POOL_WRITE] = pool;
     thread_pool_start(pool);
     
     pool = thread_pool_new("disk_read", queue_new());
     pool->min_threads = 1;
     pool->max_threads = 2;
     pool->func = thloop_disk_read;
-    status->pools[POOL_DISK_READ] = pool;
     thread_pool_start(pool);
     
     pool = thread_pool_new("worker", queue_new());
     pool->min_threads = 1;
     pool->max_threads = 5;
     pool->func = thloop_worker;
-    status->pools[POOL_WORKERS] = pool;
     thread_pool_start(pool);
     
 }
@@ -211,7 +207,7 @@ void hmain_loop(hmain_status *status) {
                     if (conn->isReading == true) {
                         continue;
                     }
-                    queue_add(status->pools[POOL_READ]->queue, queue_item_new2("READ", (void*)conn));
+                    queue_add(status->pools[1]->queue, queue_item_new2("READ", (void*)conn));
                 }
             } else if (EVENT_IS(current_event, EPOLLOUT)) {
                 //Data can be written to connection
@@ -219,7 +215,7 @@ void hmain_loop(hmain_status *status) {
                 if (conn->isWriting == true || (conn->pending_responses == NULL && conn->pending_write == NULL)) {
                     continue;
                 }
-                queue_add(status->pools[POOL_WRITE]->queue, queue_item_new2("WRITE", (void*)conn));
+                queue_add(status->pools[2]->queue, queue_item_new2("WRITE", (void*)conn));
             }
         }//for events
     }//while shutdown == false
@@ -257,7 +253,7 @@ void* thloop_read(void * arg) {
             
             //conn->pending_write = data_pool_appendbuffer(conn->pending_write, conn->status->buffer_pool, buffer, count);
             
-            queue_add(conn->status->pools[POOL_WRITE]->queue, queue_item_new2("WRITE", (void*)conn));
+            queue_add(conn->status->pools[2]->queue, queue_item_new2("WRITE", (void*)conn));
             /*if (conn->parse_data == NULL) {
                 conn->parse_data = calloc(1, sizeof(hmain_parse_data));
                 conn->parse_data->parser = calloc(1, sizeof(http_parser));

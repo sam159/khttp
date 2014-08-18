@@ -34,7 +34,7 @@ extern "C" {
     server_status* server_status_new(config_server *config);
     void server_status_delete(server_status *status);
     
-    void server_start_pools(server_status *status);
+    void server_start_pools(server_status *status, thread_func pool_functions[]);
     void server_stop_pools(server_status *status);
 
 #ifdef	__cplusplus

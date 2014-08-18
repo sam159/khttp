@@ -11,8 +11,13 @@
 #ifdef	__cplusplus
 extern "C" {
 #endif
+    
+#define DEFAULT_CONFIG_FILE "khttpd.ini"
 
-
+#include "server-state.h"
+    
+    void server_start(server_status *status, const char* config_file);
+    void server_teardown(server_status *status);
 
 #ifdef	__cplusplus
 }

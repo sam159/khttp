@@ -18,6 +18,7 @@
       <itemPath>src/mime.h</itemPath>
       <itemPath>src/queue.h</itemPath>
       <itemPath>src/server-connection.h</itemPath>
+      <itemPath>src/server-loop.h</itemPath>
       <itemPath>src/server-socket.h</itemPath>
       <itemPath>src/server-state.h</itemPath>
       <itemPath>src/server.h</itemPath>
@@ -46,6 +47,10 @@
       <itemPath>src/mime.c</itemPath>
       <itemPath>src/queue.c</itemPath>
       <itemPath>src/server-connection.c</itemPath>
+      <itemPath>src/server-loop-read.c</itemPath>
+      <itemPath>src/server-loop-worker.c</itemPath>
+      <itemPath>src/server-loop-write.c</itemPath>
+      <itemPath>src/server-loop.c</itemPath>
       <itemPath>src/server-socket.c</itemPath>
       <itemPath>src/server-state.c</itemPath>
       <itemPath>src/server.c</itemPath>
@@ -160,6 +165,16 @@
       <item path="src/server-connection.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/server-connection.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/server-loop-read.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop-worker.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop-write.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/server-socket.c" ex="false" tool="0" flavor2="0">
       </item>
@@ -278,6 +293,16 @@
       <item path="src/server-connection.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="src/server-connection.h" ex="false" tool="3" flavor2="0">
+      </item>
+      <item path="src/server-loop-read.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop-worker.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop-write.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop.c" ex="false" tool="0" flavor2="0">
+      </item>
+      <item path="src/server-loop.h" ex="false" tool="3" flavor2="0">
       </item>
       <item path="src/server-socket.c" ex="false" tool="0" flavor2="0">
       </item>

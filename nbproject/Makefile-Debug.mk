@@ -48,6 +48,10 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/queue.o \
 	${OBJECTDIR}/src/server-connection.o \
+	${OBJECTDIR}/src/server-loop-read.o \
+	${OBJECTDIR}/src/server-loop-worker.o \
+	${OBJECTDIR}/src/server-loop-write.o \
+	${OBJECTDIR}/src/server-loop.o \
 	${OBJECTDIR}/src/server-socket.o \
 	${OBJECTDIR}/src/server-state.o \
 	${OBJECTDIR}/src/server.o \
@@ -144,6 +148,26 @@ ${OBJECTDIR}/src/server-connection.o: nbproject/Makefile-${CND_CONF}.mk src/serv
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-connection.o src/server-connection.c
+
+${OBJECTDIR}/src/server-loop-read.o: nbproject/Makefile-${CND_CONF}.mk src/server-loop-read.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-loop-read.o src/server-loop-read.c
+
+${OBJECTDIR}/src/server-loop-worker.o: nbproject/Makefile-${CND_CONF}.mk src/server-loop-worker.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-loop-worker.o src/server-loop-worker.c
+
+${OBJECTDIR}/src/server-loop-write.o: nbproject/Makefile-${CND_CONF}.mk src/server-loop-write.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-loop-write.o src/server-loop-write.c
+
+${OBJECTDIR}/src/server-loop.o: nbproject/Makefile-${CND_CONF}.mk src/server-loop.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/server-loop.o src/server-loop.c
 
 ${OBJECTDIR}/src/server-socket.o: nbproject/Makefile-${CND_CONF}.mk src/server-socket.c 
 	${MKDIR} -p ${OBJECTDIR}/src

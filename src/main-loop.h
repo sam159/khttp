@@ -22,7 +22,7 @@ extern "C" {
 #define CONN_UNLOCK(c) pthread_mutex_unlock(c->mutex)
     
     typedef enum hmain_pool {
-        POOL_READ, POOL_WRITE, POOL_WORKERS, POOL_DISK_READ
+        POOL_READA, POOL_WRITEA, POOL_WORKERSA, POOL_DISK_READA
     } hmain_pool;
     
     //typedef enum skt_elem_hstate {HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD} skt_elem_hstate;

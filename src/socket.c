@@ -28,6 +28,7 @@ socket_info* skt_new(int fd) {
     socket_info* skt = calloc(1, sizeof(socket_info));
     skt->id = skt_nextid();
     skt->fd = fd;
+    skt->closed = false;
     skt->time_opened = time(NULL);
     skt->error = false;
     skt->clientaddr = NULL;
@@ -114,14 +115,16 @@ void skt_close(socket_info* skt) {
     if (close(skt->fd) < 0) {
         warning(true, "error closing socket");
     }
+    skt->closed = true;
 }
-const char* skt_clientaddr(socket_info *skt) {
+char* skt_clientaddr(socket_info *skt, char* address, size_t address_len) {
     assert(skt != NULL);
-    char *tmp = calloc(INET_ADDRSTRLEN, sizeof(char));
-    const char* address = inet_ntop(AF_INET, &skt->clientaddr->sin_addr, tmp, INET_ADDRSTRLEN);
+    assert(address != NULL);
+    assert(address_len >= INET_ADDRSTRLEN);
+    inet_ntop(AF_INET, &skt->clientaddr->sin_addr, address, address_len);
     if (address == NULL) {
         warning(true, "error fetching client address");
-        free(tmp);
+        free(address);
     }
     return address;
 }

@@ -10,7 +10,7 @@
 #include "log.h"
 
 queue_item* queue_item_new() {
-    static uint64_t nextid = 0;
+    static uint64_t nextid = 1;
     
     queue_item *item = calloc(1, sizeof(queue_item));
     item->id = __atomic_fetch_add(&nextid, 1, __ATOMIC_SEQ_CST);
@@ -131,6 +131,7 @@ queue_item* queue_fetchone(queue *q, bool blocking) {
             //Add to processing list
             queue_pending_item *token = calloc(1, sizeof(queue_pending_item));
             token->qid = item->id;
+            token->data = item->data;
             LL_APPEND(q->processing, token);
         }
     }
@@ -206,7 +207,8 @@ void queue_return_item(queue *q, queue_item *item, bool finished) {
     pthread_cond_broadcast(q->processing_cond);
     QUEUE_UNLOCK(q);
 }
-void queue_waitfor_pending(queue *q, uint64_t itemid) {
+void queue_pending_wait(queue *q, uint64_t itemid) {
+    assert(q!=NULL);
     QUEUE_LOCK(q);
     
     bool found;
@@ -217,4 +219,23 @@ void queue_waitfor_pending(queue *q, uint64_t itemid) {
         QUEUE_HAS_PENDING(q, itemid, found);
     }
     QUEUE_UNLOCK(q);
+}
+void queue_pending_waitptr(queue *q, void* ptr) {
+    uint64_t itemid;
+    
+    queue_pending_item *elem;
+    do {
+        QUEUE_LOCK(q);
+        itemid = 0;
+        LL_FOREACH(q->processing, elem) {
+            if (elem->data == ptr) {
+                itemid = elem->qid;
+                break;
+            }
+        }
+        QUEUE_UNLOCK(q);
+        if (itemid > 0) {
+            queue_pending_wait(q, itemid);
+        }
+    } while(itemid > 0);
 }

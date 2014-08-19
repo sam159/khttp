@@ -23,6 +23,7 @@ extern "C" {
     typedef struct socket_info {
         u_int64_t id;
         int fd;
+        bool closed;
         struct sockaddr_in* clientaddr;
         time_t time_opened;
         bool error;
@@ -37,7 +38,7 @@ extern "C" {
     size_t skt_write(socket_info* skt, char* data, size_t len);
     int skt_write_data_buffer(socket_info *skt, data_buffer_list *list);
     void skt_close(socket_info *skt);
-    const char* skt_clientaddr(socket_info *skt);
+    char* skt_clientaddr(socket_info *skt, char* address, size_t address_len);
 
 #ifdef	__cplusplus
 }

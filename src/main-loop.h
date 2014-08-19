@@ -16,7 +16,7 @@ extern "C" {
 #include <time.h>
 #include <pthread.h>
     
-#define EPOLL_MAXEVENTS 128
+    #define EPOLL_MAXEVENTS 128
     
 #define CONN_LOCK(c) pthread_mutex_lock(c->mutex)
 #define CONN_UNLOCK(c) pthread_mutex_unlock(c->mutex)

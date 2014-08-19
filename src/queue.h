@@ -73,6 +73,7 @@ extern "C" {
     
     typedef struct queue_pending_item {
         uint64_t qid;
+        void * data;
         struct queue_pending_item *next;
     } queue_pending_item;
     
@@ -97,6 +98,7 @@ extern "C" {
    size_t queue_count(queue *q);
    void queue_return_item(queue *q, queue_item *item, bool finished);
    void queue_pending_wait(queue *q, uint64_t itemid);
+   void queue_pending_waitptr(queue *q, void* ptr);
 
 #ifdef	__cplusplus
 }

@@ -87,8 +87,10 @@ socket_info* server_socket_accept(int fd, int flags) {
     skt->clientaddr = clientaddr;
     skt->fd = clientfd;
     
-    info("[#%lu %s] New Connection", skt->id, skt_clientaddr(skt));
+    char * address = calloc(INET_ADDRSTRLEN, sizeof(char));
+    skt_clientaddr(skt, address, INET_ADDRSTRLEN);
+    info("[#%lu %s] New Connection", skt->id, address);
+    free(address);
     
     return skt;
-    
 }

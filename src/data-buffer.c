@@ -36,7 +36,7 @@ void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n) 
     BUFFER_LIST_WR_LOCK(list);
     
     int blocks = 1;
-    data_buffer *newbuf=NULL;
+    data_buffer *newbuf = data_buffer_new(DATA_BUFFER_SIZE);
     while(blocks * DATA_BUFFER_SIZE < n) {
         blocks++;
         LL_PREPEND(newbuf, data_buffer_new(DATA_BUFFER_SIZE));
@@ -54,8 +54,8 @@ void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n) 
         elem->wOffset += copy_count;
     }
     
-    LL_CONCAT(list->first, elem);
-    BUFFER_LIST_WR_LOCK(list);
+    LL_CONCAT(list->first, newbuf);
+    BUFFER_LIST_WR_UNLOCK(list);
 }
 void data_buffer_list_lock(data_buffer_list *list, bool rd, bool wr) {
     assert(list != NULL);

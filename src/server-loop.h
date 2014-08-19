@@ -18,10 +18,10 @@ extern "C" {
 #define EP_WAIT_TIME 2000
     
 #define EP_CONN(event) (server_connection*)event->data.ptr
-#define EP_EVENT_IS(event, type) ((event->events & type) != 0)
+#define EP_EVENT_IS(event, type) ((event->events & type) == type)
 #define EP_EVENT_ISNOT(event, type) (!EP_EVENT_IS(event, type))
 
-    void server_loop(server_status *state);
+    void server_loop(server_state *state);
     void* server_loop_read(void* arg);
     void* server_loop_write(void* arg);
     void* server_loop_worker(void* arg);

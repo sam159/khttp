@@ -43,7 +43,6 @@ OBJECTFILES= \
 	${OBJECTDIR}/src/http-server.o \
 	${OBJECTDIR}/src/http.o \
 	${OBJECTDIR}/src/log.o \
-	${OBJECTDIR}/src/main-loop.o \
 	${OBJECTDIR}/src/main.o \
 	${OBJECTDIR}/src/mime.o \
 	${OBJECTDIR}/src/queue.o \
@@ -123,11 +122,6 @@ ${OBJECTDIR}/src/log.o: nbproject/Makefile-${CND_CONF}.mk src/log.c
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/log.o src/log.c
-
-${OBJECTDIR}/src/main-loop.o: nbproject/Makefile-${CND_CONF}.mk src/main-loop.c 
-	${MKDIR} -p ${OBJECTDIR}/src
-	${RM} "$@.d"
-	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/main-loop.o src/main-loop.c
 
 ${OBJECTDIR}/src/main.o: nbproject/Makefile-${CND_CONF}.mk src/main.c 
 	${MKDIR} -p ${OBJECTDIR}/src

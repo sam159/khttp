@@ -57,7 +57,7 @@ void server_socket_listen_epoll(int fd, uint16_t port, int *out_epfd) {
     }
     
     //Register socket with epoll
-    struct epoll_event svr_event;
+    struct epoll_event svr_event = {0};
     svr_event.data.fd = fd;
     svr_event.events = EPOLLIN | EPOLLET;
     if (epoll_ctl(epfd, EPOLL_CTL_ADD, fd, &svr_event) < 0) {
@@ -78,7 +78,10 @@ socket_info* server_socket_accept(int fd, int flags) {
     int clientfd=0;
     socklen_t clientaddr_len = (socklen_t)sizeof(struct sockaddr_in);
     clientfd = accept4(fd, (struct sockaddr*)clientaddr, &clientaddr_len, flags);
-    if (clientfd < 0 && errno != EAGAIN && errno != EWOULDBLOCK) {
+    if (clientfd < 0) {
+        if (errno == EAGAIN || errno == EWOULDBLOCK) {
+            return NULL;
+        }
         warning(true, "error accepting connection");
         return NULL;
     }

@@ -156,6 +156,25 @@ void queue_unblock(queue *q, uint64_t itemid) {
     }
     QUEUE_UNLOCK(q);
 }
+size_t queue_unblock_byptr(queue *q, void* ptr) {
+    assert(q!=NULL);
+    
+    size_t count = 0;
+    uint64_t itemid = 0;
+    queue_item *elem;
+    QUEUE_LOCK(q);
+    LL_FOREACH(q->list, elem) {
+        if (elem->data == ptr) {
+            elem->blocked = false;
+            count++;
+        }
+    }
+    if (count > 0) {
+        pthread_cond_signal(q->cond);
+    }
+    QUEUE_UNLOCK(q);
+    return count;
+}
 void queue_clear(queue *q) {
     assert(q!=NULL);
     QUEUE_LOCK(q);

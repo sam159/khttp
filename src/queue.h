@@ -93,6 +93,7 @@ extern "C" {
    int queue_remove_byptr(queue *q, void* ptr);
    queue_item* queue_fetchone(queue *q, bool blocking);
    void queue_unblock(queue *q, uint64_t itemid);
+   size_t queue_unblock_byptr(queue *q, void* ptr);
    void queue_clear(queue *q);
    void queue_ping(queue *q);
    size_t queue_count(queue *q);

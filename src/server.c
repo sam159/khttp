@@ -21,7 +21,7 @@
 #include "server-loop.h"
 #include "server.h"
 
-void server_start(server_status *status, const char* config_file) {
+void server_start(server_state *status) {
     assert(status!=NULL);
     assert(status->stopped==true);
     
@@ -34,16 +34,9 @@ void server_start(server_status *status, const char* config_file) {
     //Load mime types
     mime_init(NULL);
     
-    //Load the config
-    config_server *config = config_server_new();
-    if (config_read_ini(config_file, config) < 0) {
-        fatal("Could not read config");
-    }
-    status->config = config;
-    
     //Open the server socket
     status->sfd = server_socket_create();
-    server_socket_listen_epoll(status->sfd, config->listen_port, &status->epollfd);
+    server_socket_listen_epoll(status->sfd, status->config->listen_port, &status->epollfd);
     
     //Start thread pools
     thread_func pool_functions[] = {
@@ -62,7 +55,7 @@ void server_start(server_status *status, const char* config_file) {
     //Cleanup after the loop exits
     server_teardown(status);
 }
-void server_teardown(server_status *status) {
+void server_teardown(server_state *status) {
     assert(status!=NULL);
     assert(status->stopped==true);
     

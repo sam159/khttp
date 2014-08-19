@@ -7,20 +7,23 @@
 
 #include "http.h"
 #include "socket.h"
+#include "server-state.h"
 #include "server-connection.h"
 
-server_connection* server_connection_new(socket_info *skt) {
+server_connection* server_connection_new(socket_info *skt, server_state *state) {
     static uint64_t nextid = 1;
     assert(skt!=NULL);
+    assert(state!=NULL);
     
     server_connection *conn = calloc(1, sizeof(server_connection));
     conn->id = __atomic_fetch_add(&nextid, 1, __ATOMIC_SEQ_CST);
     conn->last_activity = time(NULL);
+    conn->server = state;
     conn->parse_state = NULL;
     conn->pending_responses = http_response_list_new();
     conn->pending_writes = data_buffer_list_new();
     conn->skt = skt;
-    conn->write_qid = 0;
+    pthread_mutex_init(&conn->mutex, NULL);
     return conn;
 }
 void server_connection_delete(server_connection *conn) {
@@ -29,5 +32,6 @@ void server_connection_delete(server_connection *conn) {
     http_response_list_delete(conn->pending_responses);
     data_buffer_list_delete(conn->pending_writes);
     skt_delete(conn->skt);
+    pthread_mutex_destroy(&conn->mutex);
     free(conn);
 }

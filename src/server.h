@@ -16,8 +16,8 @@ extern "C" {
 
 #include "server-state.h"
     
-    void server_start(server_status *status, const char* config_file);
-    void server_teardown(server_status *status);
+    void server_start(server_state *status);
+    void server_teardown(server_state *status);
 
 #ifdef	__cplusplus
 }

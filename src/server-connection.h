@@ -14,11 +14,16 @@ extern "C" {
 
 #include <stdint.h>
 #include <time.h>
+#include <pthread.h>
     
 #include "data-buffer.h"
 #include "http.h"
 #include "http-reader.h"
+#include "server-state.h"
 #include "socket.h"
+    
+#define CONN_LOCK(c) pthread_mutex_lock(&c->mutex)
+#define CONN_UNLOCK(c) pthread_mutex_unlock(&c->mutex)
 
     typedef struct server_parse_status {
         http_request *current_request;
@@ -32,14 +37,15 @@ extern "C" {
         uint64_t id;
         struct socket_info *skt;
         time_t last_activity;
+        server_state *server;
         http_response_list *pending_responses;
         data_buffer_list *pending_writes;
-        uint64_t write_qid;//item id in write queue
-        server_parse_status *parse_state;
+        server_parse_status *parse_state; 
         struct server_connection *next;
+        pthread_mutex_t mutex;
     } server_connection;
     
-    server_connection* server_connection_new(socket_info *skt);
+    server_connection* server_connection_new(socket_info *skt, server_state *state);
     void server_connection_delete(server_connection *conn);
 
 #ifdef	__cplusplus

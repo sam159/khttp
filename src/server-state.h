@@ -15,27 +15,26 @@ extern "C" {
 #include "http.h"
 #include "config.h"
 #include "thread-pool.h"
-#include "server-connection.h"
     
     typedef enum server_pool {
         POOL_READ, POOL_WRITE, POOL_WORKER, /*{*/THREADPOOL_NUM/*}must be last*/
     } server_pool;
     
-    typedef struct server_status {
+    typedef struct server_state {
         config_server *config;
         bool started, stopped;
         bool shutdown_requested;
         int sfd;
         int epollfd;
         thread_pool *pools[THREADPOOL_NUM];
-        server_connection *clients;
-    } server_status;
+        struct server_connection *clients;
+    } server_state;
     
-    server_status* server_status_new(config_server *config);
-    void server_status_delete(server_status *status);
+    server_state* server_status_new(config_server *config);
+    void server_status_delete(server_state *status);
     
-    void server_start_pools(server_status *status, thread_func pool_functions[]);
-    void server_stop_pools(server_status *status);
+    void server_start_pools(server_state *status, thread_func pool_functions[]);
+    void server_stop_pools(server_state *status);
 
 #ifdef	__cplusplus
 }

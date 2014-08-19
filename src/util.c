@@ -58,7 +58,7 @@ void warning(bool use_errno, char* fmt, ...) {
         strcat(errstr, msg);
         strcat(errstr, ": ");
         strcat(errstr, errnostr);
-        LOG(LFATAL, errstr);
+        LOG(LWARNING, errstr);
         free(errnostr_buf);
         free(errstr);
     } else {

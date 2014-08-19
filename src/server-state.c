@@ -10,14 +10,14 @@
 #include "server-state.h"
 #include "queue.h"
 #include "thread-pool.h"
-#include "main-loop.h"
+#include "server-connection.h"
 
-server_status* server_status_new(config_server *config) {
+server_state* server_status_new(config_server *config) {
     assert(config!=NULL);
     assert(config->host_count>0);
     assert(config->listen_port>0);
     
-    server_status *status = calloc(1, sizeof(server_status));
+    server_state *status = calloc(1, sizeof(server_state));
     status->started = false;
     status->stopped = true;
     status->shutdown_requested = false;
@@ -27,7 +27,7 @@ server_status* server_status_new(config_server *config) {
     
     return status;
 }
-void server_status_delete(server_status *status) {
+void server_status_delete(server_state *status) {
     assert(status!=NULL);
     assert(status->stopped==true);
     assert(status->pools[0]==NULL);
@@ -41,7 +41,7 @@ void server_status_delete(server_status *status) {
     free(status);
 }
 
-void server_start_pools(server_status *status, thread_func pool_functions[]) {
+void server_start_pools(server_state *status, thread_func pool_functions[]) {
     assert(status!=NULL);
     assert(status->pools[0]==NULL);
     
@@ -67,7 +67,7 @@ void server_start_pools(server_status *status, thread_func pool_functions[]) {
     status->pools[POOL_WORKER] = pool;
     thread_pool_start(pool);
 }
-void server_stop_pools(server_status *status) {
+void server_stop_pools(server_state *status) {
     assert(status!=NULL);
     assert(status->pools[0]!=NULL);
     

@@ -113,7 +113,9 @@ int skt_data_buffer(socket_info *skt, data_buffer_list *list) {
 void skt_close(socket_info* skt) {
     assert(skt != NULL);
     if (close(skt->fd) < 0) {
-        warning(true, "error closing socket");
+        if (errno != EBADF) {
+            warning(true, "error closing socket");
+        }
     }
     skt->closed = true;
 }

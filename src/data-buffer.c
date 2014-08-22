@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stddef.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <pthread.h>
@@ -41,7 +42,6 @@ void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n) 
         blocks++;
         LL_PREPEND(newbuf, data_buffer_new(DATA_BUFFER_SIZE));
     }
-    
     size_t offset = 0;
     data_buffer *elem;
     LL_FOREACH(newbuf, elem) {
@@ -59,8 +59,8 @@ void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n) 
 }
 void data_buffer_list_lock(data_buffer_list *list, bool rd, bool wr) {
     assert(list != NULL);
-    if (rd == true) pthread_mutex_lock(list->rdlock);
     if (wr == true) pthread_mutex_lock(list->wrlock);
+    if (rd == true) pthread_mutex_lock(list->rdlock);
 }
 void data_buffer_list_unlock(data_buffer_list *list, bool rd, bool wr) {
     assert(list != NULL);
@@ -71,15 +71,15 @@ void data_buffer_list_unlock(data_buffer_list *list, bool rd, bool wr) {
 data_buffer* data_buffer_new(size_t size) {
     assert(size > 0);
     
-    data_buffer* buffer = calloc(1, sizeof(data_buffer));
-    buffer->buffer = calloc(size, sizeof(char));
-    buffer->size = size;
+    data_buffer* buf = calloc(1, sizeof(data_buffer));
+    buf->buffer = calloc(size, sizeof(char));
+    buf->size = size;
     
-    return buffer;
+    return buf;
 }
-void data_buffer_free(data_buffer *buffer) {
-    assert(buffer != NULL);
+void data_buffer_free(data_buffer *buf) {
+    assert(buf != NULL);
     
-    free(buffer->buffer);
-    free(buffer);
+    free(buf->buffer);
+    free(buf);
 }

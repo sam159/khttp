@@ -4,11 +4,16 @@
 #include <unistd.h>
 #include <errno.h>
 
+#include "ut/utlist.h"
+
 #include "util.h"
 #include "log.h"
 #include "config.h"
 #include "data-buffer.h"
 #include "queue.h"
+#include "http_parser.h"
+#include "http.h"
+#include "http-reader.h"
 
 #include "server-connection.h"
 #include "server-state.h"
@@ -46,10 +51,31 @@ void* server_loop_read(void* arg) {
                 break;
             }
             totalread += count;
-            data_buffer_list_append(conn->pending_writes, readbuf, count);
-        }
-        if (totalread > 0) {
-            queue_add(conn->server->pools[POOL_WRITE]->queue, queue_item_new2("WRITE", conn));
+            bool error = false;
+            size_t parsed_count = http_parser_execute(conn->parse_state->parser, parser_get_settings(), readbuf, count);
+            if (conn->parse_state->parser->upgrade) {
+                //No upgrades of the protocol are supported, send 501 not impl. back
+                http_response *resp = http_response_create_builtin(501, "Protocol upgrade is not supported");
+                http_header_list_add(resp->headers, http_header_new(HEADER_CONNECTION, "Close"), false);
+                http_response_list_append(conn->pending_responses, resp);
+                error = true;
+            } else if (parsed_count != count || HTTP_PARSER_ERRNO(conn->parse_state->parser) != HPE_OK) {
+                //Error parsing request
+                http_response *resp = http_response_create_builtin(400, http_errno_description(HTTP_PARSER_ERRNO(conn->parse_state->parser)));
+                http_header_list_add(resp->headers, http_header_new(HEADER_CONNECTION, "Close"), false);
+                http_response_list_append(conn->pending_responses, resp);
+                error = true;
+            } else if (conn->parse_state->request_complete == true) {
+                //Request has been read successfully, notify worker queue
+                LL_APPEND(conn->pending_requests, conn->parse_state->current_request);
+                server_parser_status_reset(conn->parse_state);
+                queue_add(conn->server->pools[POOL_WORKER]->queue, queue_item_new2("REQ", (void*)conn));
+            }
+            if (error = true) {
+                //Write any error directly, this will also close the connection
+                queue_add(conn->server->pools[POOL_WRITE]->queue, queue_item_new2("RESP", (void*)conn));
+                break;
+            }
         }
         CONN_UNLOCK(conn);
         queue_return_item(th->pool->queue, item, item->blocked == false);

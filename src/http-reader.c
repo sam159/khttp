@@ -12,7 +12,7 @@
     str = calloc(length+1, sizeof(char));\
     strncpy(str, at, length);\
 }while(0);
-#define SKT(parser) ((request_parse_state*)parser->data)
+#define SKT(parser) ((server_parse_status*)parser->data)
 
 http_parser_settings *parser_settings = NULL;
 
@@ -43,6 +43,7 @@ int parser_cb_on_message_begin(http_parser* parser) {
         http_request_delete(SKT(parser)->current_request);
     }
     SKT(parser)->current_request = http_request_new();
+    SKT(parser)->request_complete = false;
 
     return 0;
 }

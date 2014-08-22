@@ -4,6 +4,8 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+
+#include "ut/utlist.h"
 #include "ut/utarray.h"
 #include "ut/utstring.h"
 
@@ -364,7 +366,7 @@ char* http_response_write(http_response *resp) {
     return outputStr;
 }
 
-http_response* http_response_create_builtin(uint16_t code, char* errmsg) {
+http_response* http_response_create_builtin(uint16_t code, const char* errmsg) {
     http_response *resp = http_response_new(http_response_line_new(code));
     
     http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/html"), false);
@@ -442,15 +444,34 @@ char* http_chunks_terminate(http_header_list *footers) {
 
 http_response_list* http_response_list_new() {
     http_response_list *list = calloc(1, sizeof(http_response_list));
-    list->responses = NULL;
-    list->count = 0;
+    assert(list != NULL);
+    list->first = NULL; 
     return list;
 }
 void http_response_list_append(http_response_list *list, http_response* response) {
-    list->responses = realloc(list->responses, (++list->count)*sizeof(http_response*));
-    list->responses[list->count-1] = response;
+    assert(list != NULL);
+    assert(response != NULL);
+    LL_APPEND(list->first, response);
+}
+http_response* http_response_list_next(http_response_list *list) {
+    assert(list != NULL);
+    return http_response_list_next2(list, true);
+}
+http_response* http_response_list_next2(http_response_list *list, bool remove) {
+    assert(list != NULL);
+    if (list->first == NULL) {
+        return NULL;
+    }
+    http_response* resp = list->first;
+    if (remove == true) {
+        LL_DELETE(list->first, resp);
+        resp->next = NULL;
+    }
+    return resp;
 }
 void http_response_list_delete(http_response_list *list) {
+    assert(list != NULL);
+    
     http_response *elem;
     HTTP_RESPONSE_LIST_FOREACH(list, elem) {
         http_response_delete(elem);

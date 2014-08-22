@@ -17,14 +17,6 @@ extern "C" {
 #include "http.h"
 #include "http_parser.h"
     
-    typedef struct request_parse_state {
-        http_request *current_request;
-        bool request_complete;
-        struct http_parser *parser;
-        http_header *parser_current_header;
-        enum {HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD} parser_header_state;
-    } request_parse_state;
-    
     http_parser_settings* parser_get_settings();
     void parser_free_settings();
     

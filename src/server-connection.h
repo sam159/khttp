@@ -25,12 +25,16 @@ extern "C" {
 #define CONN_LOCK(c) pthread_mutex_lock(&c->mutex)
 #define CONN_UNLOCK(c) pthread_mutex_unlock(&c->mutex)
 
+    typedef enum server_parse_header_state {
+        HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD
+    } server_parse_header_state;
+    
     typedef struct server_parse_status {
         http_request *current_request;
         bool request_complete;
         http_parser *parser;
         http_header *parser_current_header;
-        int parser_header_state;
+        server_parse_header_state parser_header_state;
     } server_parse_status;
     
     typedef struct server_connection {
@@ -38,6 +42,7 @@ extern "C" {
         struct socket_info *skt;
         time_t last_activity;
         server_state *server;
+        http_request *pending_requests;
         http_response_list *pending_responses;
         data_buffer_list *pending_writes;
         server_parse_status *parse_state; 
@@ -47,6 +52,10 @@ extern "C" {
     
     server_connection* server_connection_new(socket_info *skt, server_state *state);
     void server_connection_delete(server_connection *conn);
+    
+    server_parse_status* server_parse_status_new();
+    void server_parse_status_delete(server_parse_status* state);
+    void server_parser_status_reset(server_parse_status* state);
 
 #ifdef	__cplusplus
 }

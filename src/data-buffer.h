@@ -8,6 +8,7 @@
 #ifndef DATA_BUFFER_H
 #define	DATA_BUFFER_H
 
+#include <stddef.h>
 #include <stdbool.h>
 #include <pthread.h>
 
@@ -17,22 +18,25 @@ extern "C" {
 
 #define BUFFER_LIST_WR_LOCK(l) data_buffer_list_lock(l, true, true)
 #define BUFFER_LIST_WR_UNLOCK(l) data_buffer_list_unlock(l, true, true)
+#define BUFFER_LIST_WRONLY_LOCK(l) data_buffer_list_lock(l, false, true)
+#define BUFFER_LIST_WRONLY_UNLOCK(l) data_buffer_list_unlock(l, false, true)
 #define BUFFER_LIST_RD_LOCK(l) data_buffer_list_lock(l, true, false)
 #define BUFFER_LIST_RD_UNLOCK(l) data_buffer_list_unlock(l, true, false)
     
 #define DATA_BUFFER_SIZE 16*1024
     
+    typedef struct data_buffer_list {
+        struct data_buffer *first;
+        pthread_mutex_t *wrlock, *rdlock;
+    } data_buffer_list;
+    
     typedef struct data_buffer {
         char* buffer;
         size_t size;
-        size_t wOffset, rOffset;
+        size_t wOffset;
+        size_t rOffset;
         struct data_buffer *next;
     } data_buffer;
-    
-    typedef struct data_buffer_list {
-        data_buffer *first;
-        pthread_mutex_t *wrlock, *rdlock;
-    } data_buffer_list;
     
     data_buffer_list* data_buffer_list_new();
     void data_buffer_list_delete(data_buffer_list *list);
@@ -43,7 +47,6 @@ extern "C" {
     data_buffer* data_buffer_new(size_t size);
     void data_buffer_free(data_buffer *buffer);
     
-
 #ifdef	__cplusplus
 }
 #endif

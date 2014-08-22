@@ -34,8 +34,8 @@ extern "C" {
     void skt_delete(socket_info *skt);
     
     bool skt_canread(socket_info *skt);
-    size_t skt_read(socket_info *skt, char* buffer, size_t bufferlen);
-    size_t skt_write(socket_info* skt, char* data, size_t len);
+    ssize_t skt_read(socket_info *skt, char* buffer, size_t bufferlen);
+    ssize_t skt_write(socket_info* skt, char* data, size_t len);
     int skt_write_data_buffer(socket_info *skt, data_buffer_list *list);
     void skt_close(socket_info *skt);
     char* skt_clientaddr(socket_info *skt, char* address, size_t address_len);

@@ -50,9 +50,9 @@ bool skt_canread(socket_info* skt) {
     }
     return len > 0;
 }
-size_t skt_read(socket_info* skt, char* buffer, size_t bufferlen) {
+ssize_t skt_read(socket_info* skt, char* buffer, size_t bufferlen) {
     assert(skt != NULL);
-    int result = read(skt->fd, buffer, bufferlen);
+    ssize_t result = read(skt->fd, buffer, bufferlen);
     if (result < 0) {
         if (errno != EAGAIN && errno != EWOULDBLOCK) {
             warning(true, "read error");
@@ -62,11 +62,11 @@ size_t skt_read(socket_info* skt, char* buffer, size_t bufferlen) {
     }
     return result; //Number of bytes read
 }
-size_t skt_write(socket_info* skt, char* data, size_t len) {
+ssize_t skt_write(socket_info* skt, char* data, size_t len) {
     assert(skt != NULL);
     assert(data != NULL);
     
-    int result = write(skt->fd, data, len);
+    ssize_t result = write(skt->fd, data, len);
     if (result < 0) {
         if (errno != EAGAIN && errno != EWOULDBLOCK) {
             warning(true, "write error");
@@ -82,18 +82,20 @@ int skt_data_buffer(socket_info *skt, data_buffer_list *list) {
     BUFFER_LIST_RD_LOCK(list);
     
     do {
+        BUFFER_LIST_RD_LOCK(list);
         data_buffer *elem = list->first;
-        size_t written = skt_write(skt, elem->buffer + elem->rOffset, elem->wOffset - elem->rOffset);
+        ssize_t written = skt_write(skt, elem->buffer + elem->rOffset, elem->wOffset - elem->rOffset);
         if (written == 0) {
             break;
         }
         elem->rOffset += written;
         if (elem->rOffset == elem->wOffset) {
-            BUFFER_LIST_WR_LOCK(list);
+            BUFFER_LIST_WRONLY_LOCK(list);
             LL_DELETE(list->first, elem);
-            BUFFER_LIST_WR_UNLOCK(list);
+            BUFFER_LIST_WRONLY_UNLOCK(list);
             data_buffer_free(elem);
         }
+        BUFFER_LIST_RD_UNLOCK(list);
     } while(list->first != NULL);
     
     int result;

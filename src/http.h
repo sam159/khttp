@@ -82,6 +82,7 @@ extern "C" {
         http_request_parsestatus parsestatus;
         http_header_list *headers;
         char *body;
+        struct http_request *next;
     } http_request;
     
     typedef struct http_response {
@@ -89,15 +90,13 @@ extern "C" {
         http_header_list *headers;
         bool body_chunked;
         char* body;
+        struct http_response *next;
     } http_response;
     
-#define HTTP_RESPONSE_LIST_FOREACH(list, elem)                  \
-        elem = list->count == 0 ? NULL : list->responses[0];    \
-        for(int i=0; i<list->count; elem=list->responses[++i])
+#define HTTP_RESPONSE_LIST_FOREACH(list, elem) LL_FOREACH(list->first, elem)
     
     typedef struct http_response_list {
-        http_response **responses;
-        size_t count;
+        http_response *first;
     } http_response_list;
     
     char* http_method_getstring(http_request_method method, char* method_other);
@@ -130,13 +129,15 @@ extern "C" {
     void http_response_append_body(http_response *resp, const char* body);
     void http_response_delete(http_response *resp);
     char* http_response_write(http_response *resp);
-    http_response* http_response_create_builtin(uint16_t code, char* errmsg);
+    http_response* http_response_create_builtin(uint16_t code, const char* errmsg);
     
     char* http_chunks_write(char* source);
     char* http_chunks_terminate(http_header_list *footers);
     
     http_response_list* http_response_list_new();
     void http_response_list_append(http_response_list *list, http_response* response);
+    http_response* http_response_list_next(http_response_list *list);
+    http_response* http_response_list_next2(http_response_list *list, bool remove);
     void http_response_list_delete(http_response_list *list);
 
 #ifdef	__cplusplus

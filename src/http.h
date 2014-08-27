@@ -13,6 +13,8 @@
 #include <stdbool.h>
 
 #include "ut/utarray.h"
+#include "util.h"
+#include "http-body.h"
 
 #ifdef	__cplusplus
 extern "C" {
@@ -81,15 +83,18 @@ extern "C" {
         http_request_line *req;
         http_request_parsestatus parsestatus;
         http_header_list *headers;
-        char *body;
+        http_body_type body_type;
+        http_body body;
         struct http_request *next;
     } http_request;
+    
     
     typedef struct http_response {
         http_response_line *resp;
         http_header_list *headers;
         bool body_chunked;
-        char* body;
+        http_body_type body_type;
+        http_body body;
         struct http_response *next;
     } http_response;
     
@@ -131,8 +136,8 @@ extern "C" {
     char* http_response_write(http_response *resp);
     http_response* http_response_create_builtin(uint16_t code, const char* errmsg);
     
-    char* http_chunks_write(char* source);
-    char* http_chunks_terminate(http_header_list *footers);
+    void http_chunks_write(char* source, UT_string* output);
+    void http_chunks_terminate(http_header_list *footers, UT_string* output);
     
     http_response_list* http_response_list_new();
     void http_response_list_append(http_response_list *list, http_response* response);

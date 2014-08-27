@@ -70,6 +70,9 @@ void* server_loop_read(void* arg) {
                 LL_APPEND(conn->pending_requests, conn->parse_state->current_request);
                 server_parser_status_reset(conn->parse_state);
                 queue_add(conn->server->pools[POOL_WORKER]->queue, queue_item_new2("REQ", (void*)conn));
+            } else if (conn->parse_state->current_request != NULL && conn->parse_state->current_request->req!=NULL) {
+                //Send 100 Continue message
+                
             }
             if (error = true) {
                 //Write any error directly, this will also close the connection

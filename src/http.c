@@ -4,6 +4,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <time.h>
+#include <assert.h>
 
 #include "ut/utlist.h"
 #include "ut/utarray.h"
@@ -14,7 +15,7 @@
 #include "version.h"
 
 void http_header_icd_init_f(void* elem) {
-    memset(elem, 1, sizeof(http_header));
+    memset(elem, 0, sizeof(http_header));
 }
 void http_header_icd_dtor_f(void* elem) {
     http_header *header = (http_header*)elem;
@@ -25,6 +26,7 @@ void http_header_icd_dtor_f(void* elem) {
 UT_icd http_header_icd = {sizeof(http_header), http_header_icd_init_f, NULL, http_header_icd_dtor_f};
 
 char* http_method_getstring(http_request_method method, char* method_other) {
+    
     switch(method) {
         case METHOD_GET:    return "GET";
         case METHOD_POST:   return "POST";
@@ -35,7 +37,9 @@ char* http_method_getstring(http_request_method method, char* method_other) {
         case METHOD_TRACE:  return "TRACE";
         case METHOD_CONNECT:return "CONNECT";
         case METHOD_INVALID:return "<INVALID>";
-        case METHOD_OTHER:  return method_other;
+        case METHOD_OTHER:  
+            assert(method_other!=NULL); 
+            return method_other;
         default: return "<INVALID#>";
     }
 }
@@ -56,11 +60,10 @@ http_request_method http_method_fromstring(const char* method) {
 
 http_request_line *http_request_line_new(http_request_method method, const char* other) {
     http_request_line *req = calloc(1, sizeof(http_request_line));
-    if (req == NULL) {
-        fatal("calloc failed");
-    }
+    ALLOC_CHECK(req);
     req->method = method;
     if (req->method == METHOD_OTHER) {
+        assert(other!=NULL);
         req->method_other = calloc(strlen(other)+1, sizeof(char));
         strcpy(req->method_other, other);
     } else {
@@ -69,6 +72,8 @@ http_request_line *http_request_line_new(http_request_method method, const char*
     return req;
 }
 void http_request_line_delete(http_request_line *req) {
+    assert(req!=NULL);
+    
     free(req->method_other);
     free(req->uri);
     free(req);
@@ -76,14 +81,13 @@ void http_request_line_delete(http_request_line *req) {
 
 http_response_line *http_response_line_new(uint16_t code) {
     http_response_line *resp = calloc(1, sizeof(http_response_line));
-    if (resp == NULL) {
-        fatal("calloc failed");
-    }
+    ALLOC_CHECK(resp);
     resp->code = code;
     resp->version = HTTP11;
     return resp;
 }
 char* http_response_line_get_message(http_response_line *resp) {
+    assert(resp!=NULL);
     if (resp->custom_message != NULL) {
         return resp->custom_message;
     }
@@ -131,16 +135,18 @@ char* http_response_line_get_message(http_response_line *resp) {
     }
 }
 void http_response_line_delete(http_response_line *resp) {
+    assert(resp!=NULL);
     free(resp->custom_message);
     free(resp);
 }
 
 http_header *http_header_new(const char* name, const char* content) {
+    assert(name!=NULL);
+    
     http_header *header = calloc(1, sizeof(http_header));
-    if (header == NULL) {
-        fatal("calloc failed");
-    }
+    ALLOC_CHECK(header);
     header->name = calloc(strlen(name)+1, sizeof(char));
+    ALLOC_CHECK(header->name);
     strcpy(header->name, name);
     
     if (content != NULL) {
@@ -150,33 +156,38 @@ http_header *http_header_new(const char* name, const char* content) {
     return header;
 }
 void http_header_append_content(http_header *header, const char* content) {
+    assert(header!=NULL);
+    assert(content!=NULL);
+    
     if (header->content == NULL) {
         header->content = calloc(strlen(content)+1, sizeof(char));
-        if (header->content == NULL) {
-            fatal("calloc failed");
-        }
+        ALLOC_CHECK(header->content);
         strcpy(header->content, content);
     } else {
         size_t newlen = strlen(header->content) + strlen(content) + 1;
         header->content = realloc(header->content, newlen);
-        if (header->content == NULL) {
-            fatal("calloc failed");
-        }
+        ALLOC_CHECK(header->content);
         strcat(header->content, content);
     }
 }
 void http_header_delete(http_header *header) {
+    assert(header!=NULL);
+    
     free(header->name);
     free(header->content);
     free(header);
 }
 
 http_header_list* http_header_list_new() {
-    http_header_list* list = NULL;
-    utarray_new(list, &http_header_icd);
+    http_header_list* list = calloc(1, sizeof(http_header_list));
+    ALLOC_CHECK(list);
+    utarray_init(list, &http_header_icd);
     return list;
 }
 void http_header_list_add(http_header_list* list, http_header *header, bool replace) {
+    assert(list!=NULL);
+    assert(header!=NULL);
+    
     if (replace == true) {
         http_header_list_remove(list, header->name);
     }
@@ -184,6 +195,12 @@ void http_header_list_add(http_header_list* list, http_header *header, bool repl
     free(header);
 }
 http_header* http_header_list_get(http_header_list* list, const char* name) {
+    assert(list!=NULL);
+    
+    if (name == NULL || strlen(name) == 0) {
+        return NULL;
+    }
+    
     http_header *elem;
     HTTP_HEADER_FOREACH(list, elem) {
         if (strcmp(elem->name, name) == 0) {
@@ -193,6 +210,10 @@ http_header* http_header_list_get(http_header_list* list, const char* name) {
     return NULL;
 }
 http_header** http_header_list_getall(http_header_list* list, const char* name, size_t *out_header_count) {
+    assert(list!=NULL);
+    assert(name!=NULL);
+    assert(out_header_count!=NULL);
+    
     http_header **headers = NULL;
     size_t count = 0;
     http_header *elem;
@@ -200,6 +221,7 @@ http_header** http_header_list_getall(http_header_list* list, const char* name, 
         if (strcmp(elem->name, name) == 0) {
             count++;
             headers = realloc(headers, count * sizeof(http_header*));
+            ALLOC_CHECK(headers);
             headers[count-1] = elem;
         }
     }
@@ -207,6 +229,9 @@ http_header** http_header_list_getall(http_header_list* list, const char* name, 
     return headers;
 }
 void http_header_list_remove(http_header_list *list, const char* name) {
+    assert(list!=NULL);
+    assert(name!=NULL);
+    
     http_header **headers;
     size_t count;
     headers = http_header_list_getall(list, name, &count);
@@ -217,32 +242,37 @@ void http_header_list_remove(http_header_list *list, const char* name) {
     free(headers);
 }
 void http_header_list_delete(http_header_list *list) {
+    assert(list!=NULL);
+    
     utarray_free(list);
 }
 
 http_request *http_request_new() {
     http_request *req = calloc(1, sizeof(http_request));
-    if (req == NULL) {
-        fatal("calloc failed");
-    }
+    ALLOC_CHECK(req);
     req->headers = http_header_list_new();
     req->parsestatus = PARSE_REQUESTLINE;
     return req;
 }
 void http_request_append_body(http_request *req, const char* body) {
+    assert(req!=NULL);
+    assert(body!=NULL);
+    
     uint32_t bodylen = 0;
     if (req->body != NULL) {
         bodylen = strlen(req->body);
     }
     bodylen += strlen(body) + 1;
     req->body = realloc(req->body, bodylen * sizeof(char));
-    if (req->body == NULL) {
-        fatal("calloc failed");
-    }
+    ALLOC_CHECK(req->body);
     strcat(req->body, body);
 }
 char* http_request_write(http_request *req) {
+    assert(req!=NULL);
+    assert(req->req!=NULL);
+    
     UT_string *output = calloc(1, sizeof(UT_string));
+    ALLOC_CHECK(output);
     utstring_init(output);
     
     utstring_printf(output, "%s %s %s\r\n", 
@@ -259,51 +289,82 @@ char* http_request_write(http_request *req) {
     
     utstring_printf(output, "\r\n");
     
-    if (req->body != NULL) {
-        utstring_printf(output, "%s\r\n", req->body);
+    if (req->body_type == BODY_STRING) {
+        if (req->body.str != NULL) {
+            utstring_printf(output, "%s\r\n", req->body);
+        }
+    } else if (req->body_type == BODY_FILE) {
+        if (req->body.file != NULL) {
+            utstring_printf(output, "%s\r\n", req->body.file->map);
+        }
     }
     char* result = utstring_body(output);
     free(output);
     return result;
 }
 void http_request_delete(http_request *req) {
+    assert(req!=NULL);
+    
     if (req->req != NULL) {
         http_request_line_delete(req->req);
     }
     http_header_list_delete(req->headers);
-    free(req->body);
+    if (req->body_type == BODY_STRING) {
+        free(req->body.str);
+    } else if (req->body_type == BODY_FILE && req->body.file != NULL) {
+        file_map_delete(req->body.file);
+    }
     free(req);
 }
 
 http_response* http_response_new(http_response_line *resp) {
+    assert(resp!=NULL);
+    
     http_response *response = calloc(1, sizeof(http_response));
+    ALLOC_CHECK(response);
     response->resp = resp;
     response->headers = http_header_list_new();
     response->body_chunked = false;
-    response->body = NULL;
+    response->body_type = BODY_NONE;
     return response;
 }
 void http_response_append_body(http_response *resp, const char* body) {
+    assert(resp!=NULL);
+    assert(body!=NULL);
+    assert(resp->body_type == BODY_STRING);
+    
     size_t bodylen = 0;
-    if (resp->body != NULL) {
-        bodylen = strlen(resp->body);
+    if (resp->body.str != NULL) {
+        bodylen = strlen(resp->body.str);
     }
     bodylen += strlen(body) + 1;
-    if (resp->body == NULL) {
-        resp->body = calloc(bodylen, sizeof(char));
+    if (resp->body.str == NULL) {
+        resp->body.str = calloc(bodylen, sizeof(char));
+        ALLOC_CHECK(resp->body.str);
     } else {
-        resp->body = realloc(resp->body, bodylen * sizeof(char));
+        resp->body.str = realloc(resp->body.str, bodylen * sizeof(char));
+        ALLOC_CHECK(resp->body.str);
     }
-    strcat(resp->body, body);
+    strcat(resp->body.str, body);
 }
 void http_response_delete(http_response *resp) {
+    assert(resp!=NULL);
+    
     http_response_line_delete(resp->resp);
     http_header_list_delete(resp->headers);
-    free(resp->body);
+    if (resp->body_type == BODY_STRING) {
+        free(resp->body.str);
+    } else if (resp->body_type == BODY_FILE && resp->body.file != NULL) {
+        file_map_delete(resp->body.file);
+    }
     free(resp);
 }
 char* http_response_write(http_response *resp) {
+    assert(resp!=NULL);
+    assert(resp->resp !=NULL);
+    
     UT_string *output = calloc(1, sizeof(UT_string));
+    ALLOC_CHECK(output);
     utstring_init(output);
     
     if (resp->resp->version == HTTP10) {
@@ -318,8 +379,10 @@ char* http_response_write(http_response *resp) {
         if (resp->body_chunked == false) {
             //Add content length header
             uint32_t messageLength = 0;
-            if (resp->body != NULL) {
-                messageLength = strlen(resp->body);
+            if (resp->body_type == BODY_STRING) {
+                messageLength = strlen(resp->body.str);
+            } else if (resp->body_type == BODY_FILE) {
+                messageLength = resp->body.file->size;
             }
             char messageLengthStr[100];
             snprintf(messageLengthStr, 99, "%u", messageLength);
@@ -352,15 +415,22 @@ char* http_response_write(http_response *resp) {
     }
     utstring_printf(output, "\r\n");
     
-    //Write the request
-    if (resp->body_chunked == false && resp->body != NULL) {
-        utstring_printf(output, "%s\r\n", resp->body);
+    //Write the request (if string)
+    if (resp->body_type == BODY_STRING) {
+        if (resp->body_chunked == false && resp->body.str != NULL) {
+            utstring_printf(output, "%s\r\n", resp->body.str);
+        }
+        if (resp->body_chunked == true && resp->body.str != NULL) {
+            http_chunks_write(resp->body.str, output);
+        }
+    } else if (resp->body_type == BODY_FILE) {
+        if (resp->body_chunked == false) {
+            file_map_copyto_utstring(resp->body.file, output);
+        } else {
+            http_chunks_write(resp->body.file->map, output);
+        }
     }
-    if (resp->body_chunked == true && resp->body != NULL) {
-        char *chunks = http_chunks_write(resp->body);
-        utstring_printf(output, "%s", chunks);
-        free(chunks);
-    }
+    
     char* outputStr = utstring_body(output);
     free(output);
     return outputStr;
@@ -368,6 +438,7 @@ char* http_response_write(http_response *resp) {
 
 http_response* http_response_create_builtin(uint16_t code, const char* errmsg) {
     http_response *resp = http_response_new(http_response_line_new(code));
+    resp->body_type = BODY_STRING;
     
     http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/html"), false);
     
@@ -384,48 +455,44 @@ http_response* http_response_create_builtin(uint16_t code, const char* errmsg) {
     
     char* title_message = http_response_line_get_message(resp->resp);
     snprintf(buffer, 1023, "%s %hu - %s", (code >= 400) ? "Error" : "Response Code", code, title_message);
-    resp->body = str_replace(resp->body, "{{title}}", buffer);
-    resp->body = str_replace(resp->body, "{{body_title}}", buffer);
     
-    resp->body = str_replace(resp->body, "{{message}}", errmsg);
+    resp->body.str = str_replace(resp->body.str, "{{title}}", buffer);
+    resp->body.str = str_replace(resp->body.str, "{{body_title}}", buffer);
+    resp->body.str = str_replace(resp->body.str, "{{message}}", errmsg);
     
     return resp;
 }
 
-
-char* http_chunks_write(char* source) {
-    size_t sourcelen = strlen(source);
+void http_chunks_write(char* source, UT_string* output) {
+    assert(source!=NULL);
+    assert(output!=NULL);
     
-    UT_string *output = calloc(1, sizeof(UT_string));
-    utstring_init(output);
+    size_t source_len = strlen(source);
+    
     char buffer[HTTP_CHUNK_MAXSIZE+1] = {0};
-    //determine max chars for length line
+    //determine how long the length line will be
     sprintf(buffer, "%zx;\r\n", (size_t)HTTP_CHUNK_MAXSIZE);
     size_t overhead = strlen(buffer);
-    overhead+=3;//account for terminating CRLF + \0
+    overhead+=3;//account for terminating CR + LF + \0
     buffer[0] = '\0';
     
     size_t i = 0;
-    while (i < sourcelen) {
+    while (i < source_len) {
         //how much can we write in this chunk?
-        size_t sourcerem = sourcelen - i;
-        size_t chunklen = 
-                sourcerem > HTTP_CHUNK_MAXSIZE-overhead 
-                    ? HTTP_CHUNK_MAXSIZE-overhead 
-                    : sourcerem;
-        utstring_printf(output, "%zx;\r\n", chunklen);
-        memset(&buffer, 0, sizeof(buffer));
-        strncpy(buffer, source+i, chunklen);
-        utstring_printf(output, "%s\r\n", buffer);
-        i += chunklen;
+        size_t sourcerem = source_len - i;
+        size_t chunk_len = sourcerem;
+        if (chunk_len > HTTP_CHUNK_MAXSIZE-overhead) {
+            chunk_len = HTTP_CHUNK_MAXSIZE-overhead;
+        }
+        //Write chunk length
+        utstring_printf(output, "%zx;\r\n", chunk_len);
+        //Write chunk data
+        utstring_bincpy(output, source+i, chunk_len);
+        i += chunk_len;
     }
-    char* outputstr = utstring_body(output);
-    free(output);
-    return outputstr;
 }
-char* http_chunks_terminate(http_header_list *footers) {
-    UT_string *output = calloc(1, sizeof(UT_string));
-    utstring_init(output);
+void http_chunks_terminate(http_header_list *footers, UT_string* output) {
+    assert(output!=NULL);
     
     utstring_printf(output, "0\r\n");
     if (footers != NULL) {
@@ -436,29 +503,28 @@ char* http_chunks_terminate(http_header_list *footers) {
         }
     }
     utstring_printf(output, "\r\n");
-    
-    char* outputstr = utstring_body(output);
-    free(output);
-    return outputstr;
 }
 
 http_response_list* http_response_list_new() {
     http_response_list *list = calloc(1, sizeof(http_response_list));
-    assert(list != NULL);
+    ALLOC_CHECK(list);
     list->first = NULL; 
     return list;
 }
 void http_response_list_append(http_response_list *list, http_response* response) {
     assert(list != NULL);
     assert(response != NULL);
+    
     LL_APPEND(list->first, response);
 }
 http_response* http_response_list_next(http_response_list *list) {
     assert(list != NULL);
+    
     return http_response_list_next2(list, true);
 }
 http_response* http_response_list_next2(http_response_list *list, bool remove) {
     assert(list != NULL);
+    
     if (list->first == NULL) {
         return NULL;
     }

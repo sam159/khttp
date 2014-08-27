@@ -12,7 +12,17 @@
 extern "C" {
 #endif
 
+#include <stddef.h>
 #include <stdbool.h>
+    
+#include "ut/utstring.h"
+    
+#define ALLOC_CHECK(ptr)                                        \
+    do {                                                        \
+        if (ptr==NULL) {                                        \
+            fatal("Memory allocation failed. Out of memory?");  \
+        }                                                       \
+    } while(0)
     
     typedef struct file_map {
         char* map;
@@ -29,7 +39,8 @@ extern "C" {
 
     file_map* file_map_new(const char* filename);
     void  file_map_delete(file_map* map);
-
+    char* file_map_copyto_string(file_map* map, char* str, size_t str_len);
+    void file_map_copyto_utstring(file_map* map, UT_string* string);
 
 #ifdef	__cplusplus
 }

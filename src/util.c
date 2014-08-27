@@ -10,6 +10,10 @@
 #include <stdarg.h>
 #include <stdint.h>
 #include <errno.h>
+#include <assert.h>
+#include <bits/stdio2.h>
+
+#include "ut/utstring.h"
 
 #include "util.h"
 #include "log.h"
@@ -140,34 +144,6 @@ char* str_trimwhitespace(char *str)
   return str;
 }
 
-file_map* file_map_new(const char* filename) {
-    
-    int fd = open(filename, O_RDONLY);
-    if (fd < 0) {
-        warning(true, "Failed to open file for memory mapping");
-        return NULL;
-    }
-    size_t size = lseek(fd, 0L, SEEK_END);
-    void* map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
-    if (map == MAP_FAILED) {
-        warning(true, "Failed to mmap file");
-        close(fd);
-        return NULL;
-    }
-    close(fd);
-    
-    file_map* filemap = calloc(1, sizeof(file_map));
-    filemap->map = (char*)map;
-    filemap->size = size;
-    return filemap;
-}
-void file_map_delete(file_map* file) {
-    if (munmap((void*)file->map, file->size) < 0) {
-        warning(true, "failed to unmap file");
-    }
-    free(file);
-}
-
 char* str_replace(char *haystack, const char *search, const char *replacement) {
     
     size_t haystacklen = strlen(haystack);
@@ -204,3 +180,48 @@ char* str_replace(char *haystack, const char *search, const char *replacement) {
     }
     return result;
 }
+
+file_map* file_map_new(const char* filename) {
+    
+    int fd = open(filename, O_RDONLY);
+    if (fd < 0) {
+        warning(true, "Failed to open file for memory mapping");
+        return NULL;
+    }
+    size_t size = lseek(fd, 0L, SEEK_END);
+    void* map = mmap(NULL, size, PROT_READ, MAP_PRIVATE, fd, 0);
+    if (map == MAP_FAILED) {
+        warning(true, "Failed to mmap file");
+        close(fd);
+        return NULL;
+    }
+    close(fd);
+    
+    file_map* filemap = calloc(1, sizeof(file_map));
+    filemap->map = (char*)map;
+    filemap->size = size;
+    return filemap;
+}
+void file_map_delete(file_map* file) {
+    if (munmap((void*)file->map, file->size) < 0) {
+        warning(true, "failed to unmap file");
+    }
+    free(file);
+}
+char* file_map_copyto_string(file_map* map, char* str, size_t str_len) {
+    assert(map!=NULL);
+    
+    size_t newsize = str_len+map->size;
+    str = realloc(str, (newsize+1)*sizeof(char));
+    ALLOC_CHECK(str);
+    strncat(str, map->map, map->size);
+    
+    return str;
+}
+void file_map_copyto_utstring(file_map* map, UT_string* string) {
+    assert(map!=NULL);
+    assert(str!=NULL);
+    
+    utstring_bincpy(string, map->map, map->size);
+}
+

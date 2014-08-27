@@ -39,6 +39,7 @@ OBJECTFILES= \
 	${OBJECTDIR}/lib/ini.o \
 	${OBJECTDIR}/src/config.o \
 	${OBJECTDIR}/src/data-buffer.o \
+	${OBJECTDIR}/src/http-body.o \
 	${OBJECTDIR}/src/http-reader.o \
 	${OBJECTDIR}/src/http-server.o \
 	${OBJECTDIR}/src/http.o \
@@ -102,6 +103,11 @@ ${OBJECTDIR}/src/data-buffer.o: nbproject/Makefile-${CND_CONF}.mk src/data-buffe
 	${MKDIR} -p ${OBJECTDIR}/src
 	${RM} "$@.d"
 	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/data-buffer.o src/data-buffer.c
+
+${OBJECTDIR}/src/http-body.o: nbproject/Makefile-${CND_CONF}.mk src/http-body.c 
+	${MKDIR} -p ${OBJECTDIR}/src
+	${RM} "$@.d"
+	$(COMPILE.c) -g -Werror -DINI_ALLOW_BOM=0 -DINI_ALLOW_MULTILINE=0 -D_GNU_SOURCE -Ilib -std=c99 -MMD -MP -MF "$@.d" -o ${OBJECTDIR}/src/http-body.o src/http-body.c
 
 ${OBJECTDIR}/src/http-reader.o: nbproject/Makefile-${CND_CONF}.mk src/http-reader.c 
 	${MKDIR} -p ${OBJECTDIR}/src

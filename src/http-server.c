@@ -40,7 +40,7 @@ http_response* server_process_request(config_server* config, http_request *reque
     }
     if (host_config == NULL) {
         //host not found and default not found
-        response = http_response_create_builtin(500, "Server configuration error (host/default not found)");
+        response = http_response_create_builtin(500, "Server configuration error. Host not provided and default not found.");
         http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "close"), false);
         return response;
     }
@@ -152,9 +152,19 @@ http_response* server_process_request(config_server* config, http_request *reque
     free(buffer);
     free(filepath);
     
+    bool close_connection = false;
     //Check to see if client requested the connection be closed
     http_header* request_connection = http_header_list_get(request->headers, HEADER_CONNECTION);
     if (request_connection != NULL && strcasecmp(request_connection->content, "close") == 0) {
+        close_connection = true;
+    }
+    //Close a http/1.0 unless the client requested keep-alive
+    if (close_connection == false && request->req->version == HTTP10 && request_connection != NULL) {
+        if (strcasecmp(request_connection->content, "Keep-Alive") != 0) {
+            close_connection = true;
+        }
+    }
+    if (close_connection == true) {
         http_header_list_add(response->headers, http_header_new(HEADER_CONNECTION, "close"), false);
     }
     
@@ -177,15 +187,14 @@ server_file_result* server_determine_file(config_host* hconfig, const char* requ
         return result;
     }
     
-    struct stat *pathstat = calloc(1, sizeof(struct stat));
-    if (stat(filepath_actual, pathstat) < 0) {
+    struct stat pathstat;
+    if (stat(filepath_actual, &pathstat) < 0) {
         server_file_result_seterror(result, 404, "File not found");
         free(filepath_actual);
-        free(pathstat);
         return result;
     }
     //If directory
-    if (S_ISDIR(pathstat->st_mode) != 0) {
+    if (S_ISDIR(pathstat.st_mode) != 0) {
         char* dir_index = server_find_directory_index(hconfig, filepath_actual);
         if (hconfig->index_files_count > 0 && dir_index != NULL) {
             //Use the directory index
@@ -197,10 +206,9 @@ server_file_result* server_determine_file(config_host* hconfig, const char* requ
         } else {
             server_file_result_seterror(result, 403, "No index file was found and directory indexes are disabled");
         }
-    } else if (S_ISREG(pathstat->st_mode) != 0) {
+    } else if (S_ISREG(pathstat.st_mode) != 0) {
         result->path = strdup(filepath_actual);
     }
-    free(pathstat);
     free(filepath_actual);
     return result;
 }

@@ -24,6 +24,8 @@ extern "C" {
     
 #define CONN_LOCK(c) pthread_mutex_lock(&c->mutex)
 #define CONN_UNLOCK(c) pthread_mutex_unlock(&c->mutex)
+    
+#define CONN_ENQUEUE(conn, pool, name) queue_add(conn->server->pools[pool]->queue, queue_item_new2(name, (void*)conn))
 
     typedef enum server_parse_header_state {
         HSTATE_NONE, HSTATE_VALUE, HSTATE_FIELD

@@ -11,7 +11,6 @@
 #include <stdint.h>
 #include <errno.h>
 #include <assert.h>
-#include <bits/stdio2.h>
 
 #include "ut/utstring.h"
 
@@ -220,7 +219,7 @@ char* file_map_copyto_string(file_map* map, char* str, size_t str_len) {
 }
 void file_map_copyto_utstring(file_map* map, UT_string* string) {
     assert(map!=NULL);
-    assert(str!=NULL);
+    assert(string!=NULL);
     
     utstring_bincpy(string, map->map, map->size);
 }

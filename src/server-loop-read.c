@@ -69,14 +69,18 @@ void* server_loop_read(void* arg) {
                 //Request has been read successfully, notify worker queue
                 LL_APPEND(conn->pending_requests, conn->parse_state->current_request);
                 server_parser_status_reset(conn->parse_state);
-                queue_add(conn->server->pools[POOL_WORKER]->queue, queue_item_new2("REQ", (void*)conn));
-            } else if (conn->parse_state->current_request != NULL && conn->parse_state->current_request->req!=NULL) {
+                CONN_ENQUEUE(conn, POOL_WORKER, "REQ");
+            } else if (conn->parse_state->current_request != NULL && 
+                    conn->parse_state->current_request->req!=NULL &&
+                    conn->parse_state->current_request->req->version == HTTP11) {
                 //Send 100 Continue message
-                
+                http_response *resp = http_response_new(http_response_line_new(100));
+                http_response_list_append(conn->pending_responses, resp);
+                CONN_ENQUEUE(conn, POOL_WRITE, "RESP");
             }
             if (error = true) {
                 //Write any error directly, this will also close the connection
-                queue_add(conn->server->pools[POOL_WRITE]->queue, queue_item_new2("RESP", (void*)conn));
+                CONN_ENQUEUE(conn, POOL_WRITE, "RESP");
                 break;
             }
         }

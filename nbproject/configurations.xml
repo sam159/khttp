@@ -112,7 +112,7 @@
       </item>
       <item path="content/public_html/lorem.txt" ex="false" tool="3" flavor2="0">
       </item>
-      <folder path="TestFiles/f1">
+      <!--<folder path="TestFiles/f1">
         <cTool>
           <incDir>
             <pElem>.</pElem>
@@ -129,7 +129,7 @@
             <linkerOptionItem>-lcunit</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
-      </folder>
+      </folder>-->
       <item path="lib/http_parser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="lib/http_parser.h" ex="false" tool="3" flavor2="0">
@@ -258,7 +258,7 @@
       </item>
       <item path="content/public_html/lorem.txt" ex="false" tool="3" flavor2="0">
       </item>
-      <folder path="TestFiles/f1">
+      <!--<folder path="TestFiles/f1">
         <cTool>
           <incDir>
             <pElem>.</pElem>
@@ -275,7 +275,7 @@
             <linkerOptionItem>-lcunit</linkerOptionItem>
           </linkerLibItems>
         </linkerTool>
-      </folder>
+      </folder>-->
       <item path="lib/http_parser.c" ex="false" tool="0" flavor2="0">
       </item>
       <item path="lib/http_parser.h" ex="false" tool="3" flavor2="0">

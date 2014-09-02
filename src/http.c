@@ -69,6 +69,7 @@ http_request_line *http_request_line_new(http_request_method method, const char*
     } else {
         req->method_other = NULL;
     }
+    req->version = HTTPXX;
     return req;
 }
 void http_request_line_delete(http_request_line *req) {
@@ -252,20 +253,15 @@ http_request *http_request_new() {
     ALLOC_CHECK(req);
     req->headers = http_header_list_new();
     req->parsestatus = PARSE_REQUESTLINE;
+    req->body = http_body_new(BODY_NONE, NULL);
     return req;
 }
 void http_request_append_body(http_request *req, const char* body) {
     assert(req!=NULL);
     assert(body!=NULL);
+    assert(req->body->type == BODY_STRING);
     
-    uint32_t bodylen = 0;
-    if (req->body != NULL) {
-        bodylen = strlen(req->body);
-    }
-    bodylen += strlen(body) + 1;
-    req->body = realloc(req->body, bodylen * sizeof(char));
-    ALLOC_CHECK(req->body);
-    strcat(req->body, body);
+    http_body_append_str(req->body, body, strlen(body));
 }
 char* http_request_write(http_request *req) {
     assert(req!=NULL);
@@ -289,15 +285,8 @@ char* http_request_write(http_request *req) {
     
     utstring_printf(output, "\r\n");
     
-    if (req->body_type == BODY_STRING) {
-        if (req->body.str != NULL) {
-            utstring_printf(output, "%s\r\n", req->body);
-        }
-    } else if (req->body_type == BODY_FILE) {
-        if (req->body.file != NULL) {
-            utstring_printf(output, "%s\r\n", req->body.file->map);
-        }
-    }
+    http_body_writeto_utstring(req->body, output);
+    
     char* result = utstring_body(output);
     free(output);
     return result;
@@ -309,11 +298,7 @@ void http_request_delete(http_request *req) {
         http_request_line_delete(req->req);
     }
     http_header_list_delete(req->headers);
-    if (req->body_type == BODY_STRING) {
-        free(req->body.str);
-    } else if (req->body_type == BODY_FILE && req->body.file != NULL) {
-        file_map_delete(req->body.file);
-    }
+    http_body_delete(req->body);
     free(req);
 }
 
@@ -321,42 +306,26 @@ http_response* http_response_new(http_response_line *resp) {
     assert(resp!=NULL);
     
     http_response *response = calloc(1, sizeof(http_response));
-    ALLOC_CHECK(response);
+    ALLOC_CHECK(resp);
     response->resp = resp;
     response->headers = http_header_list_new();
     response->body_chunked = false;
-    response->body_type = BODY_NONE;
+    response->body = http_body_new(BODY_NONE, NULL);
     return response;
 }
 void http_response_append_body(http_response *resp, const char* body) {
     assert(resp!=NULL);
     assert(body!=NULL);
-    assert(resp->body_type == BODY_STRING);
+    assert(resp->body->type == BODY_STRING);
     
-    size_t bodylen = 0;
-    if (resp->body.str != NULL) {
-        bodylen = strlen(resp->body.str);
-    }
-    bodylen += strlen(body) + 1;
-    if (resp->body.str == NULL) {
-        resp->body.str = calloc(bodylen, sizeof(char));
-        ALLOC_CHECK(resp->body.str);
-    } else {
-        resp->body.str = realloc(resp->body.str, bodylen * sizeof(char));
-        ALLOC_CHECK(resp->body.str);
-    }
-    strcat(resp->body.str, body);
+    http_body_append_str(resp->body, body, strlen(body));
 }
 void http_response_delete(http_response *resp) {
     assert(resp!=NULL);
     
     http_response_line_delete(resp->resp);
     http_header_list_delete(resp->headers);
-    if (resp->body_type == BODY_STRING) {
-        free(resp->body.str);
-    } else if (resp->body_type == BODY_FILE && resp->body.file != NULL) {
-        file_map_delete(resp->body.file);
-    }
+    http_body_delete(resp->body);
     free(resp);
 }
 char* http_response_write(http_response *resp) {
@@ -378,12 +347,7 @@ char* http_response_write(http_response *resp) {
     if (resp->resp->code != 100) { //No additional headers for Continue messages
         if (resp->body_chunked == false) {
             //Add content length header
-            uint32_t messageLength = 0;
-            if (resp->body_type == BODY_STRING) {
-                messageLength = strlen(resp->body.str);
-            } else if (resp->body_type == BODY_FILE) {
-                messageLength = resp->body.file->size;
-            }
+            uint32_t messageLength = http_body_len(resp->body);
             char messageLengthStr[100];
             snprintf(messageLengthStr, 99, "%u", messageLength);
             http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_LENGTH, messageLengthStr), true);
@@ -416,21 +380,14 @@ char* http_response_write(http_response *resp) {
     utstring_printf(output, "\r\n");
     
     //Write the request (if string)
-    if (resp->body_type == BODY_STRING) {
-        if (resp->body_chunked == false && resp->body.str != NULL) {
-            utstring_printf(output, "%s\r\n", resp->body.str);
-        }
-        if (resp->body_chunked == true && resp->body.str != NULL) {
-            http_chunks_write(resp->body.str, output);
-        }
-    } else if (resp->body_type == BODY_FILE) {
+    if (resp->body->type == BODY_STRING) {
         if (resp->body_chunked == false) {
-            file_map_copyto_utstring(resp->body.file, output);
-        } else {
-            http_chunks_write(resp->body.file->map, output);
+            http_body_writeto_utstring(resp->body, output);
+        }
+        if (resp->body_chunked == true) {
+            http_chunks_write(resp->body->data.str, output);
         }
     }
-    
     char* outputStr = utstring_body(output);
     free(output);
     return outputStr;
@@ -438,7 +395,7 @@ char* http_response_write(http_response *resp) {
 
 http_response* http_response_create_builtin(uint16_t code, const char* errmsg) {
     http_response *resp = http_response_new(http_response_line_new(code));
-    resp->body_type = BODY_STRING;
+    http_body_set_type(resp->body, BODY_STRING);
     
     http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, "text/html"), false);
     
@@ -456,9 +413,17 @@ http_response* http_response_create_builtin(uint16_t code, const char* errmsg) {
     char* title_message = http_response_line_get_message(resp->resp);
     snprintf(buffer, 1023, "%s %hu - %s", (code >= 400) ? "Error" : "Response Code", code, title_message);
     
-    resp->body.str = str_replace(resp->body.str, "{{title}}", buffer);
-    resp->body.str = str_replace(resp->body.str, "{{body_title}}", buffer);
-    resp->body.str = str_replace(resp->body.str, "{{message}}", errmsg);
+    char* str = resp->body->data.str;
+    
+    str = str_replace(str, "{{title}}", buffer);
+    str = str_replace(str, "{{body_title}}", buffer);
+    if (errmsg == NULL) {
+        errmsg = "";
+    }
+    str = str_replace(str, "{{message}}", errmsg);
+    
+    
+    resp->body->data.str = str;
     
     return resp;
 }

@@ -45,7 +45,7 @@ extern "C" {
     } http_request_method;
     
     typedef enum http_version {
-        HTTP10, HTTP11
+        HTTP10, HTTP11, HTTPXX
     } http_version;
     
     typedef struct http_request_line {
@@ -83,18 +83,15 @@ extern "C" {
         http_request_line *req;
         http_request_parsestatus parsestatus;
         http_header_list *headers;
-        http_body_type body_type;
-        http_body body;
+        http_body *body;
         struct http_request *next;
     } http_request;
-    
     
     typedef struct http_response {
         http_response_line *resp;
         http_header_list *headers;
         bool body_chunked;
-        http_body_type body_type;
-        http_body body;
+        http_body *body;
         struct http_response *next;
     } http_response;
     

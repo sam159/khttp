@@ -38,13 +38,15 @@ extern "C" {
     } http_body;
     
     http_body* http_body_new(http_body_type type, void* dataptr);
+    void http_body_clear(http_body *body);
     void http_body_delete(http_body *body);
     
-    size_t http_body_append_str(http_body *body, const char** str_ptr);
+    size_t http_body_append_str(http_body *body, const char* str, ssize_t str_len);
     size_t http_body_len(http_body *body);
+    void http_body_set_type(http_body *body, http_body_type newtype);
     
     http_body_write_result http_body_writeto_fd(http_body *body, int fd);
-    http_body_write_result http_body_writeto_str(http_body *body, const char* str, size_t str_len);
+    http_body_write_result http_body_writeto_str(http_body *body, char** str);
     http_body_write_result http_body_writeto_utstring(http_body *body, UT_string *utstr);
 
 

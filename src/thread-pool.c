@@ -85,7 +85,9 @@ void thread_pool_stop(thread_pool *pool) {
     pool->shutdown = true;
     void* ret;
     if (pthread_join(pool->management_thread->pthread, &ret) != 0) {
-        fatal("Could not join thread pool manager");
+        if (errno != EINTR) {
+            fatal("Could not join thread pool manager");
+        }
     }
 }
 void thread_pool_add_thread(thread_pool *pool, thread *th) {

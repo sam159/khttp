@@ -11,6 +11,7 @@
 #include <stdint.h>
 #include <errno.h>
 #include <assert.h>
+#include <pthread.h>
 
 #include "ut/utstring.h"
 
@@ -178,6 +179,24 @@ char* str_replace(char *haystack, const char *search, const char *replacement) {
         result = newstr;
     }
     return result;
+}
+
+char* basename_r(char* path) {
+    static pthread_mutex_t mutex = PTHREAD_MUTEX_INITIALIZER;
+    
+    char* response = NULL;
+    
+    pthread_mutex_lock(&mutex);
+    
+    char* tmp = basename(path);
+    
+    response = calloc(strlen(tmp)+1, sizeof(char));
+    ALLOC_CHECK(response);
+    strcpy(response, tmp);
+    
+    pthread_mutex_unlock(&mutex);
+    
+    return response;
 }
 
 file_map* file_map_new(const char* filename) {

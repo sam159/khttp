@@ -87,15 +87,21 @@ extern "C" {
         struct http_request *next;
     } http_request;
     
+    typedef enum http_response_send_status {
+        SEND_RESPONSE_LINE, SEND_HEADERS, SEND_BODY, SEND_DONE
+    } http_response_send_status;
+    
     typedef struct http_response {
         http_response_line *resp;
         http_header_list *headers;
         bool body_chunked;
         http_body *body;
+        http_response_send_status send_status;
         struct http_response *next;
     } http_response;
     
 #define HTTP_RESPONSE_LIST_FOREACH(list, elem) LL_FOREACH(list->first, elem)
+#define HTTP_RESPONSE_LIST_FOREACH_SAFE(list, elem, tmp) LL_FOREACH_SAFE(list->first, elem, tmp)
     
     typedef struct http_response_list {
         http_response *first;
@@ -138,6 +144,7 @@ extern "C" {
     
     http_response_list* http_response_list_new();
     void http_response_list_append(http_response_list *list, http_response* response);
+    void http_response_list_remove(http_response_list *list, http_response* response);
     http_response* http_response_list_next(http_response_list *list);
     http_response* http_response_list_next2(http_response_list *list, bool remove);
     void http_response_list_delete(http_response_list *list);

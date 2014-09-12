@@ -75,6 +75,7 @@ void server_stop_pools(server_state *status) {
         thread_pool_stop(status->pools[i]);
         queue_delete(status->pools[i]->queue);
         thread_pool_stop(status->pools[i]);
+        thread_pool_delete(status->pools[i]);
     }
     memset(status->pools, 0, sizeof(status->pools));
 }

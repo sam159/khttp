@@ -127,29 +127,22 @@ http_response* server_process_request(config_server* config, http_request *reque
         return response;
     }
     
-    //File is ok and can be served to the client
-    fseek(file, 0, SEEK_END);
-    size_t filesize = ftell(file);
-    rewind(file);
-    
     //Read file into response
-    //TODO: send file directly from the write loop
-    char* buffer = calloc(filesize+1, sizeof(char));
-    if (fread(buffer, sizeof(char), filesize, file) != filesize) {
-        warning(true, "failed to read file into memory");
-        response = http_response_create_builtin(500, "Could not read file");
-    } else {
-        response = http_response_new(http_response_line_new(200));
-        response->resp->version = request->req->version;
-        const char* mime_type = "text/html";
-        if (filepath != NULL) {
-            mime_type = mime_get_type(filepath, DEFAULT_CONTENT_TYPE);
-        }
-        http_header_list_add(response->headers, http_header_new(HEADER_CONTENT_TYPE, mime_type), false);
-        http_response_append_body(response, buffer);
+    response = http_response_new(http_response_line_new(200));
+    response->resp->version = request->req->version;
+    const char* mime_type = "text/html";
+    if (filepath != NULL) {
+        mime_type = mime_get_type(filepath, DEFAULT_CONTENT_TYPE);
     }
-    fclose(file);
-    free(buffer);
+    http_header_list_add(response->headers, http_header_new(HEADER_CONTENT_TYPE, mime_type), false);
+    if (request->req->method == METHOD_HEAD) {
+        fclose(file);
+        http_body_set_type(response->body, BODY_NONE);
+    } else {
+        http_body_set_type(response->body, BODY_FILE);
+        response->body->data.file = file;
+    }
+    
     free(filepath);
     
     bool close_connection = false;
@@ -275,9 +268,12 @@ FILE * server_generate_directory_index(config_host *hconfig, const char* dirpath
         char* file_mod_time = calloc(32, sizeof(char));
         ctime_r(&file_mtime, file_mod_time);
         
-        utstring_printf(index, "<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\r\n", uri, uri,
+        char *file_basename = basename_r(uri);
+        
+        utstring_printf(index, "<tr><td><a href=\"%s\">%s</a></td><td>%s</td><td>%s</td></tr>\r\n", uri, file_basename,
                 (filesize!=NULL)?filesize:"N/A", 
                 (file_mod_time!=NULL)?file_mod_time:"N/A");
+        free(file_basename);
         free(file_mod_time);
         free(filepath);
         free(filesize);
@@ -286,7 +282,7 @@ FILE * server_generate_directory_index(config_host *hconfig, const char* dirpath
     closedir(dir);
     free(filestat);
     char *dirname = strdup(dirpath);
-    dirname = str_replace(dirname, hconfig->serve_dir, "/");
+    dirname = str_replace(dirname, hconfig->serve_dir, "");
     
     file_map *dirindex_map = file_map_new("dirindex.html");
     if (dirindex_map == NULL) {

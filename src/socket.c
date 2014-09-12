@@ -93,7 +93,7 @@ int skt_data_buffer(socket_info *skt, data_buffer_list *list) {
             BUFFER_LIST_WRONLY_LOCK(list);
             LL_DELETE(list->first, elem);
             BUFFER_LIST_WRONLY_UNLOCK(list);
-            data_buffer_free(elem);
+            data_buffer_delete(elem);
         }
         BUFFER_LIST_RD_UNLOCK(list);
     } while(list->first != NULL);
@@ -128,7 +128,7 @@ char* skt_clientaddr(socket_info *skt, char* address, size_t address_len) {
     inet_ntop(AF_INET, &skt->clientaddr->sin_addr, address, address_len);
     if (address == NULL) {
         warning(true, "error fetching client address");
-        free(address);
+        address[0] = '\0';
     }
     return address;
 }

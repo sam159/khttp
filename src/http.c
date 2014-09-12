@@ -74,8 +74,9 @@ http_request_line *http_request_line_new(http_request_method method, const char*
 }
 void http_request_line_delete(http_request_line *req) {
     assert(req!=NULL);
-    
-    free(req->method_other);
+    if (req->method == METHOD_OTHER) {
+        free(req->method_other);
+    }
     free(req->uri);
     free(req);
 }
@@ -311,6 +312,7 @@ http_response* http_response_new(http_response_line *resp) {
     response->headers = http_header_list_new();
     response->body_chunked = false;
     response->body = http_body_new(BODY_NONE, NULL);
+    response->send_status = SEND_RESPONSE_LINE;
     return response;
 }
 void http_response_append_body(http_response *resp, const char* body) {
@@ -332,62 +334,64 @@ char* http_response_write(http_response *resp) {
     assert(resp!=NULL);
     assert(resp->resp !=NULL);
     
+    if (resp->send_status == SEND_BODY || resp->send_status == SEND_DONE) {
+        return NULL;
+    }
+    
     UT_string *output = calloc(1, sizeof(UT_string));
     ALLOC_CHECK(output);
     utstring_init(output);
     
-    if (resp->resp->version == HTTP10) {
-        utstring_printf(output, "HTTP/1.0 ");
-    } else if (resp->resp->version == HTTP11) {
-        utstring_printf(output, "HTTP/1.1 ");
-    }
-    //Write the response line
-    utstring_printf(output, "%hu %s\r\n", resp->resp->code, http_response_line_get_message(resp->resp));
-    
-    if (resp->resp->code != 100) { //No additional headers for Continue messages
-        if (resp->body_chunked == false) {
-            //Add content length header
-            uint32_t messageLength = http_body_len(resp->body);
-            char messageLengthStr[100];
-            snprintf(messageLengthStr, 99, "%u", messageLength);
-            http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_LENGTH, messageLengthStr), true);
-        } else { //Chunked encoding
-            http_header_list_add(resp->headers, http_header_new(HEADER_TRANSFER_ENCODING, "chunked"), true);
+    if (resp->send_status == SEND_RESPONSE_LINE) {
+        if (resp->resp->version == HTTP10) {
+            utstring_printf(output, "HTTP/1.0 ");
+        } else if (resp->resp->version == HTTP11) {
+            utstring_printf(output, "HTTP/1.1 ");
         }
+        //Write the response line
+        utstring_printf(output, "%hu %s\r\n", resp->resp->code, http_response_line_get_message(resp->resp));
         
-        //Add content type if not defined
-        http_header* contenttype = http_header_list_get(resp->headers, HEADER_CONTENT_TYPE);
-        if (contenttype == NULL) {
-            http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, DEFAULT_CONTENT_TYPE), false);
-        }
-        
-        //Add date header
-        time_t timenow = time(NULL);
-        struct tm * timeinfo = gmtime(&timenow);
-        char dateStr[100] = {0};
-        strftime(dateStr, 99, FORMAT_HEADER_DATE, timeinfo);
-        http_header_list_add(resp->headers, http_header_new(HEADER_DATE, dateStr), true);
-        
-        //Add server identifier header
-        http_header_list_add(resp->headers, http_header_new(HEADER_SERVER, SERVER_NAME), true);
+        resp->send_status = SEND_HEADERS;
     }
     
-    //write headers
-    http_header *elem;
-    HTTP_HEADER_FOREACH(resp->headers, elem) {
-        utstring_printf(output, "%s: %s\r\n", elem->name, elem->content);
+    if (resp->send_status == SEND_HEADERS) {
+        if (resp->resp->code != 100) { //No additional headers for Continue messages
+            if (resp->body_chunked == false) {
+                //Add content length header
+                uint32_t messageLength = http_body_len(resp->body);
+                char messageLengthStr[100];
+                snprintf(messageLengthStr, 99, "%u", messageLength);
+                http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_LENGTH, messageLengthStr), true);
+            } else { //Chunked encoding
+                http_header_list_add(resp->headers, http_header_new(HEADER_TRANSFER_ENCODING, "chunked"), true);
+            }
+
+            //Add content type if not defined
+            http_header* contenttype = http_header_list_get(resp->headers, HEADER_CONTENT_TYPE);
+            if (contenttype == NULL) {
+                http_header_list_add(resp->headers, http_header_new(HEADER_CONTENT_TYPE, DEFAULT_CONTENT_TYPE), false);
+            }
+
+            //Add date header
+            time_t timenow = time(NULL);
+            struct tm * timeinfo = gmtime(&timenow);
+            char dateStr[100] = {0};
+            strftime(dateStr, 99, FORMAT_HEADER_DATE, timeinfo);
+            http_header_list_add(resp->headers, http_header_new(HEADER_DATE, dateStr), true);
+
+            //Add server identifier header
+            http_header_list_add(resp->headers, http_header_new(HEADER_SERVER, SERVER_NAME), true);
+        }
+        //write headers
+        http_header *elem;
+        HTTP_HEADER_FOREACH(resp->headers, elem) {
+            utstring_printf(output, "%s: %s\r\n", elem->name, elem->content);
+        }
+        utstring_printf(output, "\r\n");
+        
+        resp->send_status = SEND_BODY;
     }
-    utstring_printf(output, "\r\n");
     
-    //Write the request (if string)
-    if (resp->body->type == BODY_STRING) {
-        if (resp->body_chunked == false) {
-            http_body_writeto_utstring(resp->body, output);
-        }
-        if (resp->body_chunked == true) {
-            http_chunks_write(resp->body->data.str, output);
-        }
-    }
     char* outputStr = utstring_body(output);
     free(output);
     return outputStr;
@@ -482,10 +486,16 @@ void http_response_list_append(http_response_list *list, http_response* response
     
     LL_APPEND(list->first, response);
 }
+void http_response_list_remove(http_response_list *list, http_response* response) {
+    assert(list != NULL);
+    assert(response != NULL);
+    
+    LL_DELETE(list->first, response);
+}
 http_response* http_response_list_next(http_response_list *list) {
     assert(list != NULL);
     
-    return http_response_list_next2(list, true);
+    return http_response_list_next2(list, false);
 }
 http_response* http_response_list_next2(http_response_list *list, bool remove) {
     assert(list != NULL);
@@ -503,8 +513,8 @@ http_response* http_response_list_next2(http_response_list *list, bool remove) {
 void http_response_list_delete(http_response_list *list) {
     assert(list != NULL);
     
-    http_response *elem;
-    HTTP_RESPONSE_LIST_FOREACH(list, elem) {
+    http_response *elem, *tmp;
+    HTTP_RESPONSE_LIST_FOREACH_SAFE(list, elem, tmp) {
         http_response_delete(elem);
     }
     free(list);

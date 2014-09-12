@@ -36,6 +36,8 @@ extern "C" {
     char* str_trimwhitespace(char *str);
     char** str_splitlines(char *str, size_t *line_count);
     char* str_replace(char *str, const char *search, const char *replacement);
+    
+    char* basename_r(char* path);
 
     file_map* file_map_new(const char* filename);
     void  file_map_delete(file_map* map);

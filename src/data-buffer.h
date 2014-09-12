@@ -27,7 +27,8 @@ extern "C" {
     
     typedef struct data_buffer_list {
         struct data_buffer *first;
-        pthread_mutex_t *wrlock, *rdlock;
+        pthread_mutex_t wrlock;
+        pthread_mutex_t rdlock;
     } data_buffer_list;
     
     typedef struct data_buffer {
@@ -43,9 +44,10 @@ extern "C" {
     void data_buffer_list_append(data_buffer_list *list, const char* src, size_t n);
     void data_buffer_list_lock(data_buffer_list *list, bool rd, bool wr);
     void data_buffer_list_unlock(data_buffer_list *list, bool rd, bool wr);
+    ssize_t data_buffer_list_writeto_fd(data_buffer_list *list, int fd);
     
     data_buffer* data_buffer_new(size_t size);
-    void data_buffer_free(data_buffer *buffer);
+    void data_buffer_delete(data_buffer *buffer);
     
 #ifdef	__cplusplus
 }

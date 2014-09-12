@@ -10,8 +10,9 @@
 #include "util.h"
 #include "ut/utstring.h"
 #include "http-body.h"
+#include "log.h"
 
-http_body_write_result _http_body_file_fill_buffer(char *buffer, size_t buf_len, size_t *read_len, FILE *src) {
+http_body_write_result _http_body_file_fill_buffer(char *buffer, size_t buf_len, size_t *read_len, FILE *src, size_t offset) {
     assert(buffer!=NULL);
     assert(buf_len>0);
     assert(src!=NULL);
@@ -20,6 +21,7 @@ http_body_write_result _http_body_file_fill_buffer(char *buffer, size_t buf_len,
     if (*read_len > buf_len) {
         *read_len = buf_len;
     }
+    fseek(src, offset, SEEK_SET);
     size_t read_count = fread(buffer, sizeof(char), *read_len, src);
     if (read_count < *read_len) {
         if (ferror(src) != 0) {
@@ -84,6 +86,7 @@ void http_body_clear(http_body *body) {
             fatal("Invalid http body type");
             break;
     }
+    body->rOffset = 0;
 }
 void http_body_delete(http_body *body) {
     assert(body!=NULL);
@@ -99,9 +102,15 @@ size_t http_body_append_str(http_body *body, const char* str, ssize_t str_len) {
     if (str_len == 0) {
         return 0;
     }
-    size_t new_len = strlen(body->data.str)+str_len+1;
-    
-    body->data.str = realloc(body->data.str, new_len);
+    size_t new_len = str_len+1;
+    if (body->data.str != NULL) {
+        new_len += strlen(body->data.str);
+    }
+    if (body->data.str == NULL) {
+        body->data.str = calloc(new_len, sizeof(char));
+    } else {
+        body->data.str = realloc(body->data.str, new_len);
+    }
     ALLOC_CHECK(body->data.str);
     body->data.str[new_len-1] = '\0';
     strncat(body->data.str, str, new_len-1);
@@ -161,7 +170,7 @@ http_body_write_result http_body_writeto_fd(http_body *body, int fd) {
     
     while(body->rOffset<http_body_len(body)) {
         size_t write_len = http_body_len(body) - body->rOffset;
-        errno = EINVAL;
+        
         ssize_t written = -1;
         http_body_write_result result = HBWRITE_MORE;
         
@@ -174,7 +183,7 @@ http_body_write_result http_body_writeto_fd(http_body *body, int fd) {
                 break;
             case BODY_FILE:;
                 size_t read_count = write_len;
-                http_body_write_result read_res = _http_body_file_fill_buffer(buffer, buffer_len, &read_count, body->data.file);
+                http_body_write_result read_res = _http_body_file_fill_buffer(buffer, buffer_len, &read_count, body->data.file, body->rOffset);
                 if (read_res == HBWRITE_ERROR) {
                     result = read_res; break;
                 }
@@ -190,8 +199,10 @@ http_body_write_result http_body_writeto_fd(http_body *body, int fd) {
         if (written < 0 || result == HBWRITE_ERROR) {
             if (errno == EAGAIN || errno == EWOULDBLOCK) {
                 return HBWRITE_BLOCKED;
+            } else {
+                perror("Write Error");
+                return HBWRITE_ERROR;
             }
-            return HBWRITE_ERROR;
         }
         
         body->rOffset += written;
@@ -241,7 +252,7 @@ http_body_write_result http_body_writeto_str(http_body *body, char** str) {
                 break;
             case BODY_FILE:;
                 size_t read_count = write_len;
-                http_body_write_result read_res = _http_body_file_fill_buffer(buffer, buffer_len, &read_count, body->data.file);
+                http_body_write_result read_res = _http_body_file_fill_buffer(buffer, buffer_len, &read_count, body->data.file, body->rOffset);
                 if (read_res == HBWRITE_ERROR) {
                     result = read_res; break;
                 }
@@ -301,12 +312,12 @@ http_body_write_result http_body_writeto_utstring(http_body *body, UT_string *ut
                 break;
             case BODY_FILE:;
                 size_t read_count = write_len;
-                http_body_write_result read_res = _http_body_file_fill_buffer(buffer, buffer_len, &read_count, body->data.file);
+                http_body_write_result read_res = _http_body_file_fill_buffer(buffer, buffer_len, &read_count, body->data.file, body->rOffset);
                 if (read_res == HBWRITE_ERROR) {
                     result = read_res; break;
                 }
                 if (read_count > 0) {
-                    utstring_bincpy(utstr, src, write_len);
+                    utstring_bincpy(utstr, buffer, read_count);
                     written = read_count;
                 }
                 if (read_res == HBWRITE_DONE) {

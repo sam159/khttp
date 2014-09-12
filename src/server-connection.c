@@ -48,6 +48,7 @@ server_parse_status* server_parse_status_new() {
     state->parser_header_state = HSTATE_NONE;
     state->parser = calloc(1, sizeof(http_parser));
     http_parser_init(state->parser, HTTP_REQUEST);
+    state->parser->data = (void*)state;
     
     return state;
 }
@@ -67,7 +68,7 @@ void server_parse_status_delete(server_parse_status* state) {
 }
 void server_parser_status_reset(server_parse_status* state) {
     assert(state!=NULL);
-    
+    state->current_request = NULL;
     state->request_complete = false;
     state->parser_header_state = HSTATE_NONE;
     if (state->parser_current_header != NULL) {

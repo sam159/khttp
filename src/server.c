@@ -72,7 +72,9 @@ void server_teardown(server_state *status) {
     
     //Close server socket
     close(status->epollfd);
+    status->epollfd = 0;
     server_socket_release(status->sfd);
+    status->sfd = 0;
     
     //Free mime data
     mime_destroy();
@@ -82,6 +84,5 @@ void server_teardown(server_state *status) {
     
     //Delete config
     config_server_delete(status->config);
-    
-    server_status_delete(status);
+    status->config = NULL;
 }

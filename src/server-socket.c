@@ -73,12 +73,14 @@ void server_socket_release(int fd) {
 }
 socket_info* server_socket_accept(int fd, int flags) {
     assert(fd>=0);
-    struct sockaddr_in* clientaddr = calloc(1, sizeof(struct sockaddr_in));
     
-    int clientfd=0;
+    struct sockaddr_in* clientaddr = calloc(1, sizeof(struct sockaddr_in));
     socklen_t clientaddr_len = (socklen_t)sizeof(struct sockaddr_in);
+    int clientfd=0;
+    
     clientfd = accept4(fd, (struct sockaddr*)clientaddr, &clientaddr_len, flags);
     if (clientfd < 0) {
+        free(clientaddr);
         if (errno == EAGAIN || errno == EWOULDBLOCK) {
             return NULL;
         }

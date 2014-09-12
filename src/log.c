@@ -80,7 +80,7 @@ void*log_loop(void* arg) {
     void** buf = calloc(1, sizeof(void*));
     char* timestr = calloc(32, sizeof(char));
     time_t ctime;
-    struct tm *tinfo = calloc(1,sizeof(struct tm));
+    struct tm tinfo = {0};
     while(true) {
         //Read next message pointer from pipe
         if (read(l->pRead, buf, sizeof(void*)) <= 0) {
@@ -95,8 +95,8 @@ void*log_loop(void* arg) {
             break;
         }
         ctime = time(NULL);
-        localtime_r(&ctime, tinfo);
-        if (strftime(timestr, 32, "%F %R", tinfo) == 0) {
+        localtime_r(&ctime, &tinfo);
+        if (strftime(timestr, 32, "%F %R", &tinfo) == 0) {
             strcpy(timestr, "N/A");
         }
         log_msg* msg = (log_msg*)(*buf);

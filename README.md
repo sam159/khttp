@@ -6,7 +6,7 @@ Not intended for production, it has not had sufficient testing to ensure that it
 
 ## Libs
 
-Other than Pthreads and Magic (for content type detection) the only external code is from [Joyend Http Parsing lib][1]
+Other than Pthreads and Magic (for content type detection) the only external code is from [Joyent Http Parsing lib][1]
 for parsing http requests and [UTHash][2] for managing linked lists, arrays and strings.
 
 [1]: https://github.com/joyent/http-parser

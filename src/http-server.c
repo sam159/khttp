@@ -146,14 +146,16 @@ http_response* server_process_request(config_server* config, http_request *reque
     free(filepath);
     
     bool close_connection = false;
+    bool close_requested = false;
     //Check to see if client requested the connection be closed
     http_header* request_connection = http_header_list_get(request->headers, HEADER_CONNECTION);
     if (request_connection != NULL && strcasecmp(request_connection->content, "close") == 0) {
         close_connection = true;
+        close_requested = true;
     }
     //Close a http/1.0 unless the client requested keep-alive
-    if (close_connection == false && request->req->version == HTTP10 && request_connection != NULL) {
-        if (strcasecmp(request_connection->content, "Keep-Alive") != 0) {
+    if (close_connection == false && request->req->version == HTTP10 && close_requested == false) {
+        if (request_connection == NULL || strcasecmp(request_connection->content, "Keep-Alive") != 0) {
             close_connection = true;
         }
     }

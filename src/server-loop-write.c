@@ -81,13 +81,28 @@ void* server_loop_write(void* arg) {
                         }
                     }
                     if (response != NULL && response->send_status == SEND_DONE) {
+                        
+                        bool last = false;
+                        http_header *connection_header = http_header_list_get(response->headers, HEADER_CONNECTION);
+                        if (connection_header != NULL && strcasecmp(connection_header->content, "close") == 0) {
+                            skt_close(conn->skt);
+                            last = true;
+                        }
+                        
                         http_response_list_remove(conn->pending_responses, response);
                         http_response_delete(response);
-                        response = http_response_list_next(conn->pending_responses);
+                        if (last == true) {
+                            response = NULL;
+                            goto FINSIHED;
+                        } else {
+                            response = http_response_list_next(conn->pending_responses);
+                        }
                     }
                 }
-            } //response != null
+            } //while response != null
         }//if no pending writes
+        
+        FINSIHED:
         
         CONN_UNLOCK(conn);
         queue_return_item(th->pool->queue, item, item->blocked == false);
